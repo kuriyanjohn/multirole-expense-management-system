@@ -7,13 +7,13 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const fileUpload = require('express-fileupload');
 
-const connectDB = require('./config/db'); // MongoDB connection
+
+const connectDB = require('./config/db.js'); // MongoDB connection
 const authRoutes = require('./routes/authRoutes');
-const expenseRoutes = require('./routes/expenseRoutes');
+// const expenseRoutes = require('./routes/expenseRoutes.js');
 // Import other routes as needed
 
 const app = express();
-
 // ================== Middleware ================== //
 
 // Security Headers
@@ -51,7 +51,7 @@ app.use(fileUpload({
 
 // ================== Routes ================== //
 app.use('/api/auth', authRoutes);
-app.use('/api/expenses', expenseRoutes);
+// app.use('/api/expenses', expenseRoutes);
 // Add budgetRoutes, userRoutes, notificationRoutes, etc.
 
 // ================== Error Handler ================== //
@@ -65,7 +65,7 @@ const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 http://localhost:${PORT}`);
   });
 }).catch((err) => {
   console.error('❌ Failed to connect to DB:', err);

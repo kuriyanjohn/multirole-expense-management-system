@@ -1,12 +1,40 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // ✅ import useNavigate
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import authService from '../services/authService.js';
 
 const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
-  const [role, setRole] = useState('user');
+  const navigate = useNavigate(); // ✅ initialize navigate
 
-  const handleSubmit = (e) => {
+  const [user, setUser] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('employee');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onLogin({ name: username, role });
+    try {
+      const res = await authService.loginUser({ email, password });
+      console.log('resdata', res);
+
+      const { user, token } = res;
+      setUser(user);
+      onLogin(user); // ✅ Update parent state
+      localStorage.setItem('token', token);
+
+      // ✅ Navigate based on role
+      if (user.role === 'admin') {
+        navigate('/adminDashboard');
+      } else if (user.role === 'manager') {
+        navigate('/managerDashboard');
+      } else {
+        navigate('/employeeDashboard');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Login failed");
+    }
   };
 
   return (
@@ -14,10 +42,18 @@ const Login = ({ onLogin }) => {
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md w-96 space-y-4">
         <h2 className="text-xl font-semibold text-center">Login</h2>
         <input
-          type="text"
-          placeholder="Enter your name"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-4 py-2 border rounded"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-2 border rounded"
           required
         />
@@ -26,13 +62,20 @@ const Login = ({ onLogin }) => {
           onChange={(e) => setRole(e.target.value)}
           className="w-full px-4 py-2 border rounded"
         >
-          <option value="user">User</option>
+          <option value="employee">User</option>
+          <option value="manager">Manager</option>
           <option value="admin">Admin</option>
         </select>
         <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
           Login
         </button>
       </form>
+      <p className="text-sm text-center">
+        Don't have an account?{' '}
+        <Link to="/register" className="text-blue-600 hover:underline">
+          Register here
+        </Link>
+      </p>
     </div>
   );
 };
