@@ -5,9 +5,8 @@ const User = require('../../models/User');
 
 
 const getTeamExpenses = async (req, res) => {
-  // You can extend this based on your logic of assigning employees to managers
   try {
-    const expenses = await Expense.find(); // Filter by manager's team
+    const expenses = await Expense.find(); 
     res.json(expenses);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving team expenses' });
