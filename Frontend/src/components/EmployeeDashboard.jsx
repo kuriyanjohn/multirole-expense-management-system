@@ -1,4 +1,4 @@
-"use client"
+@d"use client"
 
 import { useState,useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
@@ -128,13 +128,12 @@ const [expenseCount, setExpenseCount] = useState(0);
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            // ⚠️ Don't manually set Content-Type
           },
         }
       );
-      console.log("✅ Expense added:", res.data);
+      console.log(" Expense added:", res.data);
     } catch (err) {      
-      console.error("❌ Error adding expense:", err);
+      console.error("Error adding expense:", err);
     }
   };
   const handleEdit = (expense) => {
@@ -145,7 +144,7 @@ const [expenseCount, setExpenseCount] = useState(0);
       project: expense.project,
       date: expense.date,
       notes: expense.notes,
-      receipt: null, // Can't pre-fill file input
+      receipt: null, 
     })
   }
 
@@ -162,7 +161,7 @@ const handleUpdate = async () => {
     const res = await fetch(`/api/employee/expense/${editingExpense._id}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`, // include JWT if required
+        Authorization: `Bearer ${token}`, 
       },
       body: formData,
     });
