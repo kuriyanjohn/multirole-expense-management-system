@@ -12,7 +12,8 @@ import Login from './components/login';
 import Register from './pages/register';
 
 import 'react-toastify/dist/ReactToastify.css';
-import './App.css';
+import './styles/app.css';
+// import './styles/globals.css';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -60,9 +61,7 @@ const App = () => {
           element={
             <ProtectedRoute allowedRoles={['manager']}>
               <div className="flex h-screen">
-                <Sidebar role="manager" />
                 <div className="flex flex-col flex-1">
-                <Header onLogout={() => setUser(null)} />
                   <main className="p-4 overflow-y-auto">
                     <ManagerDashboard user={user} />
                     <ExpenseList expenses={expenses} />
@@ -78,16 +77,16 @@ const App = () => {
           element={
             <ProtectedRoute allowedRoles={['employee']}>
               <div className="flex h-screen">
-                {/* <Sidebar role="employee" /> */}
+                <Sidebar role="employee" />
                 <div className="flex flex-col flex-1">
-                {/* <Header onLogout={() => setUser(null)} /> */}
+                <Header onLogout={() => setUser(null)} />
                   <main className="p-4 overflow-y-auto">
                     <EmployeeDashboard user={user} />
                     <ExpenseList expenses={expenses} />
                   </main>
                 </div>
               </div>
-            </ProtectedRoute>
+            // </ProtectedRoute>
           }
         />
 

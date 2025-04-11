@@ -100,7 +100,7 @@ const categories = [
 // Projects for the dropdown
 const projects = ["Client A", "Client B", "Client C", "Internal", "Personal"]
 
-const UserDashboard = ({ userRole = "employee" }) => {
+const EmployeeDashboard = ({ userRole = "employee" }) => {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [showNotification, setShowNotification] = useState(false)
   const [expenses, setExpenses] = useState(expensesData)
@@ -745,4 +745,4 @@ const UserDashboard = ({ userRole = "employee" }) => {
   )
 }
 
-export default UserDashboard
+export default EmployeeDashboard
