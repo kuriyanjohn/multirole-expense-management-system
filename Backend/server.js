@@ -1,19 +1,19 @@
 require('dotenv').config();
 const express = require('express');
+const app = express();
 const cors = require('cors');
 // const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const fileUpload = require('express-fileupload');
-
 
 const connectDB = require('./config/db.js'); // MongoDB connection
-const authRoutes = require('./routes/authRoutes');
-// const expenseRoutes = require('./routes/expenseRoutes.js');
-// Import other routes as needed
+const PORT = process.env.PORT || 5000;
 
-const app = express();
+const authRoutes = require('./routes/authRoutes');
+const expenseRoutes = require('./routes/expenseRoutes.js');
+
+
 // ================== Middleware ================== //
 
 // Security Headers
@@ -39,29 +39,20 @@ app.use(express.urlencoded({ extended: true }));
 // Cookie Parser (for JWT stored in cookie if needed)
 app.use(cookieParser());
 
-// File Upload (for receipts)
-app.use(fileUpload({
-  useTempFiles: true,
-  tempFileDir: '/tmp/',
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  abortOnLimit: true,
-  safeFileNames: true,
-  preserveExtension: true,
-}));
-
 // ================== Routes ================== //
 app.use('/api/auth', authRoutes);
-// app.use('/api/expenses', expenseRoutes);
-// Add budgetRoutes, userRoutes, notificationRoutes, etc.
+app.use("/api/expenses", expenseRoutes);
+app.use('/api/employee', require('./routes/employeeRoutes'));
+app.use('/api/manager', require('./routes/managerRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+
 
 // ================== Error Handler ================== //
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error(err);
   res.status(500).json({ message: 'Internal Server Error' });
 });
 
-// ================== Database & Server Init ================== //
-const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
   app.listen(PORT, () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button, buttonVariants }  from "../components/ui/button"
 import  Input  from "../components/ui/input"
@@ -10,6 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Badge, badgeVariants } from "../components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog"
 import Label from "../components/ui/label"
+import axios from "axios";
+import { toast } from 'react-toastify';
+
+
 import {
   Download,
   Upload,
@@ -24,66 +28,8 @@ import {
 } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../components/ui/chart"
 import { Bar, BarChart, Cell, Pie, PieChart, XAxis, YAxis, CartesianGrid } from "recharts"
+const token = localStorage.getItem("token"); 
 
-// Sample data
-const pieData = [
-  { name: "Travel", value: 4000, color: "hsl(var(--chart-1))" },
-  { name: "Office Supplies", value: 3000, color: "hsl(var(--chart-2))" },
-  { name: "Entertainment", value: 3000, color: "hsl(var(--chart-3))" },
-  { name: "Utilities", value: 2000, color: "hsl(var(--chart-4))" },
-]
-
-const barData = [
-  { name: "Jan", expense: 1200 },
-  { name: "Feb", expense: 2100 },
-  { name: "Mar", expense: 800 },
-  { name: "Apr", expense: 1600 },
-  { name: "May", expense: 900 },
-  { name: "Jun", expense: 1700 },
-]
-
-const expensesData = [
-  {
-    id: "1",
-    amount: 1200,
-    category: "Travel",
-    project: "Client A",
-    date: "2023-04-10",
-    notes: "Business trip to Mumbai",
-    receipt: true,
-    status: "approved",
-  },
-  {
-    id: "2",
-    amount: 300,
-    category: "Office Supplies",
-    project: "Internal",
-    date: "2023-04-15",
-    notes: "New monitor",
-    receipt: true,
-    status: "pending",
-  },
-  {
-    id: "3",
-    amount: 500,
-    category: "Entertainment",
-    project: "Client B",
-    date: "2023-04-20",
-    notes: "Client dinner",
-    receipt: true,
-    status: "approved",
-  },
-  {
-    id: "4",
-    amount: 150,
-    category: "Utilities",
-    project: "Internal",
-    date: "2023-04-25",
-    notes: "Internet bill reimbursement",
-    receipt: false,
-    status: "rejected",
-  },
-]
 
 // Categories for the dropdown
 const categories = [
@@ -101,9 +47,33 @@ const categories = [
 const projects = ["Client A", "Client B", "Client C", "Internal", "Personal"]
 
 const EmployeeDashboard = ({ userRole = "employee" }) => {
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/employee/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        setExpenses(res.data.recentExpenses);
+        setPieChartData(res.data.pieData);
+        setBarChartData(res.data.barData);
+        setTotalSpent(res.data.totalSpent);
+        setExpenseCount(res.data.expenseCount);
+      } catch (err) {
+        console.error('❌ Failed to load dashboard data:', err);
+      }
+    };
+  
+    fetchDashboardData();
+  }, []);
+  const [expenses, setExpenses] = useState([]);
+const [pieData, setPieChartData] = useState([]);
+const [barData, setBarChartData] = useState([]);
+const [totalSpent, setTotalSpent] = useState(0);
+const [expenseCount, setExpenseCount] = useState(0);
   const [activeTab, setActiveTab] = useState("dashboard")
   const [showNotification, setShowNotification] = useState(false)
-  const [expenses, setExpenses] = useState(expensesData)
   const [editingExpense, setEditingExpense] = useState(null)
   const [dateRange, setDateRange] = useState({ start: "", end: "" })
   const [statusFilter, setStatusFilter] = useState("all")
@@ -118,61 +88,55 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
     notes: "",
     receipt: null,
   })
-
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setExpenseForm({
-      ...expenseForm,
-      [name]: value,
-    })
-  }
-
+    setExpenseForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
   const handleSelectChange = (name, value) => {
     setExpenseForm({
       ...expenseForm,
       [name]: value,
     })
   }
-
   const handleFileChange = (e) => {
-    setExpenseForm({
-      ...expenseForm,
-      receipt: e.target.files[0],
-    })
-  }
+    const file = e.target.files[0];
+    setExpenseForm((prev) => ({
+      ...prev,
+      receipt: file,
+    }));
+  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    // Create new expense
-    const newExpense = {
-      id: Date.now().toString(),
-      amount: Number.parseFloat(expenseForm.amount),
-      category: expenseForm.category,
-      project: expenseForm.project,
-      date: expenseForm.date,
-      notes: expenseForm.notes,
-      receipt: !!expenseForm.receipt,
-      status: "pending",
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("amount", expenseForm.amount);
+    formData.append("date", expenseForm.date);
+    formData.append("category", expenseForm.category);
+    formData.append("project", expenseForm.project);
+    formData.append("notes", expenseForm.notes);
+    
+    if (expenseForm.receipt) {
+      formData.append("receipt", expenseForm.receipt); // 👈 Must match multer field
     }
-
-    setExpenses([newExpense, ...expenses])
-
-    // Reset form
-    setExpenseForm({
-      amount: "",
-      category: "",
-      project: "",
-      date: new Date().toISOString().split("T")[0],
-      notes: "",
-      receipt: null,
-    })
-
-    // Show notification
-    setShowNotification(true)
-    setTimeout(() => setShowNotification(false), 3000)
-  }
-
+  
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/employee/expenses`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // ⚠️ Don't manually set Content-Type
+          },
+        }
+      );
+      console.log("✅ Expense added:", res.data);
+    } catch (err) {      
+      console.error("❌ Error adding expense:", err);
+    }
+  };
   const handleEdit = (expense) => {
     setEditingExpense(expense)
     setExpenseForm({
@@ -185,38 +149,62 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
     })
   }
 
-  const handleUpdate = () => {
-    const updatedExpenses = expenses.map((exp) =>
-      exp.id === editingExpense.id
-        ? {
-            ...exp,
-            amount: Number.parseFloat(expenseForm.amount),
-            category: expenseForm.category,
-            project: expenseForm.project,
-            date: expenseForm.date,
-            notes: expenseForm.notes,
-            receipt: expenseForm.receipt ? true : exp.receipt,
-          }
-        : exp,
-    )
+  // EDIT expense
+const handleUpdate = async () => {
+  try {
+    const formData = new FormData();
+    Object.entries(expenseForm).forEach(([key, value]) => {
+      if (value) formData.append(key, value);
+    });
 
-    setExpenses(updatedExpenses)
-    setEditingExpense(null)
+    if (receiptFile) formData.append("receipt", receiptFile);
 
-    // Reset form
-    setExpenseForm({
-      amount: "",
-      category: "",
-      project: "",
-      date: new Date().toISOString().split("T")[0],
-      notes: "",
-      receipt: null,
-    })
+    const res = await fetch(`/api/employee/expense/${editingExpense._id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`, // include JWT if required
+      },
+      body: formData,
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      setExpenses((prev) =>
+        prev.map((exp) => (exp._id === updated._id ? updated : exp))
+      );
+      setEditingExpense(null);
+      toast.success("Expense updated successfully");
+    } else {
+      toast.error("Failed to update expense");
+    }
+  } catch (error) {
+    console.error("Update error:", error);
   }
+};
 
-  const handleDelete = (id) => {
-    setExpenses(expenses.filter((exp) => exp.id !== id))
+// DELETE expense
+const handleDelete = async (id) => {
+  try {
+    const confirm = window.confirm("Are you sure you want to delete this expense?");
+    if (!confirm) return;
+
+    const res = await fetch(`/api/employee/expenses/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.ok) {
+      setExpenses((prev) => prev.filter((e) => e._id !== id));
+      toast.success("Expense deleted");
+    } else {
+      toast.error("Failed to delete expense");
+    }
+  } catch (error) {
+    console.error("Delete error:", error);
   }
+};
 
   const filteredExpenses = expenses.filter((expense) => {
     // Filter by status
@@ -231,12 +219,10 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
 
     return true
   })
-
   // Calculate budget usage
   const totalBudget = 15000
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0)
   const budgetUsage = (totalExpenses / totalBudget) * 100
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Notification */}
@@ -248,7 +234,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
           </div>
         </div>
       )}
-
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
@@ -289,7 +274,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                 </div>
               </CardContent>
             </Card>
-
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -309,7 +293,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                 </div>
               </CardContent>
             </Card>
-
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -324,7 +307,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
               </CardContent>
             </Card>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -373,7 +355,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                 </ChartContainer>
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader>
                 <CardTitle>Monthly Expense Trend</CardTitle>
@@ -407,59 +388,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
               <CardTitle>My Expenses</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label htmlFor="start-date">Start Date</Label>
-                    <Input
-                      id="start-date"
-                      type="date"
-                      value={dateRange.start}
-                      onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="end-date">End Date</Label>
-                    <Input
-                      id="end-date"
-                      type="date"
-                      value={dateRange.end}
-                      onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="status-filter">Status</Label>
-                    <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
-                      <SelectTrigger id="status-filter">
-                        <SelectValue placeholder="All Statuses" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="category-filter">Category</Label>
-                    <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value)}>
-                      <SelectTrigger id="category-filter">
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
               <div className="rounded-md border">
                 <table className="w-full text-sm">
                   <thead>
@@ -475,7 +403,7 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                   </thead>
                   <tbody>
                     {filteredExpenses.map((expense) => (
-                      <tr key={expense.id} className="border-b">
+                      <tr key={expense._id} className="border-b">
                         <td className="p-4">{expense.date}</td>
                         <td className="p-4">₹{expense.amount.toLocaleString()}</td>
                         <td className="p-4">{expense.category}</td>
@@ -516,9 +444,10 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                                 </Button>
                               </DialogTrigger>
                               <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Edit Expense</DialogTitle>
-                                </DialogHeader>
+                              <DialogHeader>
+                                <DialogTitle>Edit Expense</DialogTitle>
+                                
+                              </DialogHeader>
                                 <div className="grid gap-4 py-4">
                                   <div className="grid grid-cols-2 gap-4">
                                     <div className="grid gap-2">
@@ -605,7 +534,7 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDelete(expense.id)}
+                              onClick={() => handleDelete(expense._id)}
                               disabled={expense.status !== "pending"}
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
@@ -627,7 +556,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
             </CardContent>
           </Card>
         </TabsContent>
-
         {/* Add Expense Tab */}
         <TabsContent value="add">
           <Card>
@@ -669,7 +597,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                     </div>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="grid gap-2">
                     <Label htmlFor="category">Category</Label>
@@ -706,7 +633,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                     </Select>
                   </div>
                 </div>
-
                 <div className="grid gap-2">
                   <Label htmlFor="notes">Notes</Label>
                   <Textarea
@@ -717,13 +643,12 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                     onChange={handleInputChange}
                   />
                 </div>
-
                 <div className="grid gap-2">
                   <Label htmlFor="receipt">Receipt Upload (Optional)</Label>
                   <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
                     <Upload className="h-8 w-8 text-gray-400 mb-2" />
                     <p className="text-sm text-gray-500 mb-2">Drag and drop your receipt here, or click to browse</p>
-                    <Input id="receipt" type="file" className="hidden" onChange={handleFileChange} />
+                    <Input id="receipt" name="receipt" type="file" className="hidden" onChange={handleFileChange} />
                     <Button type="button" variant="outline" onClick={() => document.getElementById("receipt").click()}>
                       Browse Files
                     </Button>
@@ -732,7 +657,6 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
                     )}
                   </div>
                 </div>
-
                 <Button type="submit" className="w-full">
                   Submit Expense
                 </Button>
@@ -744,5 +668,4 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
     </div>
   )
 }
-
 export default EmployeeDashboard

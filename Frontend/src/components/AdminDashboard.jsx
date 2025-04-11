@@ -7,11 +7,47 @@ import {
   Users, FileText, Settings, Tag, DollarSign, CheckCircle, XCircle, Clock,
   Bell, Filter, Calendar, Search, Plus, Edit, Trash2, ChevronDown
 } from 'lucide-react';
-import Sidebar from './sidebar';
-import Header from './Header';
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Button, buttonVariants }  from "../components/ui/button"
+import  Input  from "../components/ui/input"
+import Textarea from "../components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { Badge, badgeVariants } from "../components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog"
+import Label from "../components/ui/label"
+import axios from "axios";
+import { toast } from 'react-toastify';
+const token = localStorage.getItem("token"); 
+
 
 const AdminDashboard = ({ data, onLogout }) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("/api/admin/dashboard", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const result = await res.json();
+        setDashboardData(result);
+      } catch (error) {
+        console.error("Failed to fetch admin dashboard data:", error);
+      }
+    };
+  
+    fetchData();
+  }, []);
+  const [dashboardData, setDashboardData] = useState({});
+
   // State management for various features
+  const sampleExpenses = dashboardData.expenses || [];
+const usersList = dashboardData.users || [];
+const companies = dashboardData.companies || [];
+const categories = dashboardData.categories || [];
+const monthlyTrend = dashboardData.monthlyTrend || [];
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterStatus, setFilterStatus] = useState('all');
@@ -25,44 +61,12 @@ const AdminDashboard = ({ data, onLogout }) => {
   // Colors for charts
   const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
   
-  // Sample data (in a real app, this would come from an API)
-  const sampleExpenses = data?.expenses || [
-    { id: 1, employee: "John Doe", team: "Marketing", category: "Travel", amount: 1250, status: "approved", date: "2025-03-15" },
-    { id: 2, employee: "Jane Smith", team: "Engineering", category: "Office Supplies", amount: 450, status: "pending", date: "2025-04-01" },
-    { id: 3, employee: "Mike Johnson", team: "Sales", category: "Client Meeting", amount: 830, status: "rejected", date: "2025-03-28" },
-    { id: 4, employee: "Sarah Williams", team: "HR", category: "Training", amount: 1600, status: "approved", date: "2025-04-05" },
-    { id: 5, employee: "Alex Brown", team: "Engineering", category: "Equipment", amount: 2100, status: "pending", date: "2025-04-08" }
-  ];
   
-  const usersList = data?.users || [
-    { id: 1, name: "John Doe", email: "john@example.com", role: "user", team: "Marketing", company: "Acme Inc." },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "user", team: "Engineering", company: "Acme Inc." },
-    { id: 3, name: "Mike Johnson", email: "mike@example.com", role: "manager", team: "Sales", company: "Acme Inc." },
-    { id: 4, name: "Sarah Williams", email: "sarah@example.com", role: "user", team: "HR", company: "TechCorp" },
-    { id: 5, name: "Alex Brown", email: "alex@example.com", role: "user", team: "Engineering", company: "TechCorp" }
-  ];
-  
-  const companies = data?.companies || [
-    { id: 1, name: "Acme Inc.", monthlyBudget: 15000 },
-    { id: 2, name: "TechCorp", monthlyBudget: 25000 }
-  ];
-  
-  const categories = data?.categories || [
-    "Travel", "Office Supplies", "Client Meeting", "Training", "Equipment", "Food & Beverages"
-  ];
   
   const notifications = [
     { id: 1, message: "New expense report submitted by Jane Smith", time: "10 minutes ago", read: false },
     { id: 2, message: "Expense #1042 was approved", time: "1 hour ago", read: false },
     { id: 3, message: "Budget limit warning for Engineering team", time: "3 hours ago", read: true }
-  ];
-  
-  // Monthly expense trend data
-  const monthlyTrend = [
-    { month: 'Jan', amount: 12500 },
-    { month: 'Feb', amount: 14200 },
-    { month: 'Mar', amount: 15800 },
-    { month: 'Apr', amount: 9600 },
   ];
   
   // Functions for various actions

@@ -8,151 +8,52 @@ import {
   PieChart as PieChartIcon, Users, Calendar, DollarSign, 
   AlertTriangle, Settings, ChevronDown
 } from 'lucide-react';
+import axios from 'axios';
 
-// Sample data - would be replaced with actual API calls
-const MOCK_EMPLOYEES = [
-  { id: 1, name: 'Jane Cooper', role: 'Developer', team: 'Engineering' },
-  { id: 2, name: 'Alex Johnson', role: 'Designer', team: 'Design' },
-  { id: 3, name: 'Michael Brown', role: 'QA Tester', team: 'Engineering' },
-  { id: 4, name: 'Sarah Davis', role: 'Developer', team: 'Engineering' },
-  { id: 5, name: 'Robert Wilson', role: 'Marketing', team: 'Marketing' },
-];
 
-const MOCK_CATEGORIES = [
-  'Travel', 'Food & Dining', 'Office Supplies', 'Software', 
-  'Hardware', 'Training', 'Events', 'Miscellaneous'
-];
 
-const MOCK_EXPENSES = [
-  { 
-    id: 101, 
-    employeeId: 1, 
-    employeeName: 'Jane Cooper',
-    amount: 125.50, 
-    category: 'Travel', 
-    project: 'Client X Website', 
-    date: '2025-03-15', 
-    notes: 'Train tickets to client meeting', 
-    receipt: 'receipt-101.pdf',
-    status: 'pending',
-    team: 'Engineering',
-    submitted: '2025-03-16'
-  },
-  { 
-    id: 102, 
-    employeeId: 2, 
-    employeeName: 'Alex Johnson',
-    amount: 65.20, 
-    category: 'Food & Dining', 
-    project: 'Client X Website', 
-    date: '2025-03-10', 
-    notes: 'Team lunch during sprint planning', 
-    receipt: 'receipt-102.pdf',
-    status: 'approved',
-    team: 'Design',
-    submitted: '2025-03-12'
-  },
-  { 
-    id: 103, 
-    employeeId: 3, 
-    employeeName: 'Michael Brown',
-    amount: 299.99, 
-    category: 'Hardware', 
-    project: 'Internal', 
-    date: '2025-03-05', 
-    notes: 'New monitor for workstation', 
-    receipt: 'receipt-103.pdf',
-    status: 'rejected',
-    team: 'Engineering',
-    submitted: '2025-03-06'
-  },
-  { 
-    id: 104, 
-    employeeId: 4, 
-    employeeName: 'Sarah Davis',
-    amount: 49.99, 
-    category: 'Software', 
-    project: 'Internal', 
-    date: '2025-03-18', 
-    notes: 'Monthly subscription', 
-    receipt: 'receipt-104.pdf',
-    status: 'pending',
-    team: 'Engineering',
-    submitted: '2025-03-18'
-  },
-  { 
-    id: 105, 
-    employeeId: 5, 
-    employeeName: 'Robert Wilson',
-    amount: 550.00, 
-    category: 'Events', 
-    project: 'Marketing Campaign', 
-    date: '2025-03-20', 
-    notes: 'Booth setup at industry conference', 
-    receipt: 'receipt-105.pdf',
-    status: 'pending',
-    team: 'Marketing',
-    submitted: '2025-03-21'
-  },
-  { 
-    id: 106, 
-    employeeId: 1, 
-    employeeName: 'Jane Cooper',
-    amount: 35.75, 
-    category: 'Office Supplies', 
-    project: 'Internal', 
-    date: '2025-03-22', 
-    notes: 'Notebooks and pens', 
-    receipt: 'receipt-106.pdf',
-    status: 'pending',
-    team: 'Engineering',
-    submitted: '2025-03-22'
-  },
-  { 
-    id: 107, 
-    employeeId: 2, 
-    employeeName: 'Alex Johnson',
-    amount: 199.99, 
-    category: 'Training', 
-    project: 'Internal', 
-    date: '2025-03-14', 
-    notes: 'Online course subscription', 
-    receipt: 'receipt-107.pdf',
-    status: 'approved',
-    team: 'Design',
-    submitted: '2025-03-15'
-  },
-];
-
-const MOCK_TEAM_BUDGETS = [
-  { team: 'Engineering', budget: 5000, spent: 3250, remaining: 1750 },
-  { team: 'Design', budget: 3000, spent: 1100, remaining: 1900 },
-  { team: 'Marketing', budget: 4000, spent: 2800, remaining: 1200 },
-];
-
-const MOCK_NOTIFICATIONS = [
-  { id: 201, title: 'New expense submitted', message: 'Jane Cooper submitted a new expense for approval', date: '2025-04-10', read: false },
-  { id: 202, title: 'Budget alert', message: 'Marketing team has used 70% of monthly budget', date: '2025-04-09', read: true },
-  { id: 203, title: 'Expense rejected', message: 'You rejected Michael Brown\'s hardware expense', date: '2025-04-07', read: true },
-];
-
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#6b7280'];
 
 const ManagerDashboard = () => {
-  const [expenses, setExpenses] = useState(MOCK_EXPENSES);
-  const [selectedExpense, setSelectedExpense] = useState(null);
-  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
-  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [Users,setUsers]=useState([])
+  const [categories,setCategories]=useState([])
+  const [expenses, setExpenses] = useState([]);
+  const [selectedBudget,setSelectedBudget] = useState([])
+  const [selectedExpense,setSelectedExpense]=useState([])
+  const [teamBudgets, setTeamBudgets] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState('All Teams');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [selectedStatus, setSelectedStatus] = useState('All Statuses');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [selectedBudget, setSelectedBudget] = useState(null);
+  let isNotificationsOpen=true
+  let isExpenseModalOpen=true
+  let isBudgetModalOpen=true
+  let setIsBudgetModalOpen=true
+  let setIsExpenseModalOpen=true
+
+
+  useEffect(() => {
+    const fetchData = async () => { 
+      try {
+        const [expenseRes, budgetRes, notifyRes] = await Promise.all([
+          axios.get('/api/manager/expenses'),
+          axios.get('/api/manager/budgets'),
+          axios.get('/api/manager/notifications'),
+        ]);
+        setExpenses(expenseRes.data);
+        setTeamBudgets(budgetRes.data);
+        setNotifications(notifyRes.data);
+      } catch (err) {
+        console.error('Error fetching manager data:', err);
+      }
+    };
+
+    fetchData();
+  }, []);
+  
   
   // Get array of all teams
-  const teams = ['All Teams', ...Array.from(new Set(MOCK_EMPLOYEES.map(employee => employee.team)))];
+  const teams = ['All Teams', ...Array.from(new Set(Users.map(employee => employee.team)))];
   
   // Calculate statistics
   const pendingExpenses = expenses.filter(expense => expense.status === 'pending').length;
@@ -179,7 +80,7 @@ const ManagerDashboard = () => {
   });
 
   // Prepare data for charts
-  const categoryData = MOCK_CATEGORIES.map(category => {
+  const categoryData = categories.map(category => {
     const amount = filteredExpenses
       .filter(expense => expense.category === category)
       .reduce((sum, expense) => sum + expense.amount, 0);
@@ -187,7 +88,7 @@ const ManagerDashboard = () => {
     return { name: category, value: amount };
   }).filter(item => item.value > 0);
 
-  const employeeData = MOCK_EMPLOYEES.map(employee => {
+  const employeeData = Users.map(employee => {
     const amount = filteredExpenses
       .filter(expense => expense.employeeId === employee.id)
       .reduce((sum, expense) => sum + expense.amount, 0);
@@ -374,7 +275,7 @@ const ManagerDashboard = () => {
           </div>
         </div>
         
-        {MOCK_TEAM_BUDGETS.filter(budget => 
+        {teamBudgets.filter(budget => 
           selectedTeam === 'All Teams' || budget.team === selectedTeam
         ).map(budget => (
           <div key={budget.team} className="stats-card budget-card">
@@ -445,7 +346,7 @@ const ManagerDashboard = () => {
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
               <option value="All Categories">All Categories</option>
-              {MOCK_CATEGORIES.map(category => (
+              {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
@@ -693,8 +594,8 @@ const ManagerDashboard = () => {
       {isExpenseModalOpen && (
         <ExpenseModal
           expense={selectedExpense}
-          employees={MOCK_EMPLOYEES}
-          categories={MOCK_CATEGORIES}
+          employees={Users}
+          categories={categories}
           onSave={selectedExpense ? handleUpdateExpense : handleCreateExpense}
           onClose={() => setIsExpenseModalOpen(false)}
         />
@@ -704,7 +605,7 @@ const ManagerDashboard = () => {
       {isBudgetModalOpen && (
         <BudgetModal
           teams={teams.filter(team => team !== 'All Teams')}
-          budgets={MOCK_TEAM_BUDGETS}
+          budgets={teamBudgets}
           selectedBudget={selectedBudget}
           onSave={handleUpdateBudget}
           onClose={() => setIsBudgetModalOpen(false)}
