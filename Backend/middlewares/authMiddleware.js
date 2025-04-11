@@ -23,7 +23,7 @@ const protect = async (req, res, next) => {
     }
 
     req.user = user;
-    console.log('Authenticated user:', req.user); // Debugging line
+    console.log('Authenticated user:', req.user); 
     next();
   } catch (err) {
     console.error('Token error:', err.message);
@@ -39,7 +39,5 @@ const authorizeRoles = (...roles) => {
     next();
   };
 };
-
-
 
 module.exports = { protect, authorizeRoles };
