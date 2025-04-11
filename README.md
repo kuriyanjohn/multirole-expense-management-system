@@ -18,19 +18,7 @@ A full-featured MERN Stack application that enables companies to manage expenses
 ---
 
 ## 🛠️ Setup Instructions
-###backend setup
-  -cd backend
-  -npm install
-  -npm run dev
-  -.env
-    -PORT=5000
-    -MONGO_URI=your_mongodb_connection_string
-    -JWT_SECRET=your_jwt_secret
 
-###frontend setup
-  -cd frontend
-  -npm install
-  -npm start
     
 
 ### 1. Clone the Repository
