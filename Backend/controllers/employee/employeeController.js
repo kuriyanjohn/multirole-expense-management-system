@@ -13,7 +13,7 @@ const addExpense = async (req, res) => {
       project,
       notes,
       receipt,
-      createdBy: req.user._id, // assumes auth middleware
+      createdBy: req.user._id, 
     });
 
     const saved = await newExpense.save();
