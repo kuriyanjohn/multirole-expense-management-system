@@ -7,10 +7,9 @@ const Header = ({ onLogout }) => {
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to logout?');
     if (confirmed) {
-      // Clear token and user session if stored
       localStorage.removeItem('token');
-      onLogout(); // Clear user state in parent (App.jsx)
-      navigate('/login'); // Redirect to login page
+      onLogout(); 
+      navigate('/login'); 
     }
   };
 
