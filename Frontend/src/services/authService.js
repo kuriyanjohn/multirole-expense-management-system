@@ -23,7 +23,6 @@ const loginUser = async (userData) => {
   }
 };
 
-// ✅ Exporting an object with default export
 const authService = {
   registerUser,
   loginUser,

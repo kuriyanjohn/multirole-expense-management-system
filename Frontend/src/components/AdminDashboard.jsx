@@ -82,12 +82,10 @@ const monthlyTrend = dashboardData.monthlyTrend || [];
   };
   
   const handleApproval = (id, newStatus) => {
-    // In a real app, this would call an API to update the status
     console.log(`Expense #${id} status changed to ${newStatus}`);
   };
   
   const handleDelete = (id) => {
-    // In a real app, this would call an API to delete the item
     console.log(`Deleting item #${id}`);
   };
   
