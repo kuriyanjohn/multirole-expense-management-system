@@ -13,7 +13,7 @@ const addExpense = async (req, res) => {
       project,
       notes,
       receipt,
-      createdBy: req.user._id, // assumes auth middleware
+      createdBy: req.user._id, 
     });
 
     const saved = await newExpense.save();
@@ -96,7 +96,7 @@ const getEmployeeDashboardData = async (req, res) => {
       name,
       value,
       color: `hsl(var(--chart-${(i % 6) + 1}))`, // color cycling
-    }));
+    }));    
 
     // Bar chart data: total per month
     const monthlyMap = {};
@@ -109,11 +109,11 @@ const getEmployeeDashboardData = async (req, res) => {
       name,
       expense,
     }));
+    
 
-    // Recent 5 expenses (sorted by date descending)
     const recentExpenses = expenses
       .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 5);
+      
 
     res.status(200).json({
       totalSpent,

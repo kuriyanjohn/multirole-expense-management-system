@@ -20,6 +20,8 @@ const manageUsers = async (req, res) => {
 };
 const getAdminDashboardData = async (req, res) => {
     try {
+      console.log('admindashboard');
+      
       const expenses = await Expense.find().populate('createdBy', 'name email team role');
       const users = await User.find({}, 'name email role team company');
       const companies = await Company.find({}, 'name monthlyBudget');
@@ -37,11 +39,14 @@ const getAdminDashboardData = async (req, res) => {
           $sort: { _id: 1 }
         }
       ]);
+
+
   
       const formattedMonthlyTrend = monthlyTrend.map((item) => ({
         month: new Date(2000, item._id - 1).toLocaleString('default', { month: 'short' }),
         amount: item.amount
       }));
+  console.log('monthly trend',formattedMonthlyTrend);
   
       res.status(200).json({
         expenses,

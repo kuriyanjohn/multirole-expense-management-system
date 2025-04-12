@@ -6,10 +6,10 @@ const upload = require('../middlewares/uploadMiddleware');
 
 
 router.use(protect);
-router.use((req, res, next) => {
-    console.log('👤 User in route:', req.user);
-    next();
-  });
+// router.use((req, res, next) => {
+//     console.log('👤 User in route:', req.user);
+//     next();
+//   });
 router.use(authorizeRoles('employee'));
 
 router.post('/expenses', upload.single('receipt'), employeeController.addExpense);

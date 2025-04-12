@@ -61,7 +61,7 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
         setTotalSpent(res.data.totalSpent);
         setExpenseCount(res.data.expenseCount);
       } catch (err) {
-        console.error('❌ Failed to load dashboard data:', err);
+        console.error(' Failed to load dashboard data:', err);
       }
     };
   
@@ -118,7 +118,7 @@ const [expenseCount, setExpenseCount] = useState(0);
     formData.append("notes", expenseForm.notes);
     
     if (expenseForm.receipt) {
-      formData.append("receipt", expenseForm.receipt); // 👈 Must match multer field
+      formData.append("receipt", expenseForm.receipt);
     }
   
     try {
@@ -128,13 +128,14 @@ const [expenseCount, setExpenseCount] = useState(0);
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            // ⚠️ Don't manually set Content-Type
           },
         }
       );
-      console.log("✅ Expense added:", res.data);
+      console.log(" Expense added:", res.data);
+      toast.success("Expense submitted successfully!"); 
     } catch (err) {      
-      console.error("❌ Error adding expense:", err);
+      console.error(" Error adding expense:", err);
+      toast.error("Failed to submit expense. Please try again.");
     }
   };
   const handleEdit = (expense) => {
@@ -333,8 +334,8 @@ const handleDelete = async (id) => {
                     },
                   }}
                 >
-                  <PieChart>
-                    <Pie
+                  <PieChart width={1000} height={200}>
+                    <Pie 
                       data={pieData}
                       cx="50%"
                       cy="50%"
@@ -359,7 +360,7 @@ const handleDelete = async (id) => {
               <CardHeader>
                 <CardTitle>Monthly Expense Trend</CardTitle>
               </CardHeader>
-              <CardContent className="h-80">
+              <CardContent className="h-80 border">
                 <ChartContainer
                   config={{
                     expense: {
@@ -368,13 +369,13 @@ const handleDelete = async (id) => {
                     },
                   }}
                 >
-                  <BarChart data={barData}>
+                  <BarChart width={1000} height={200} data={barData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
-                  </BarChart>
+                    <Bar dataKey="expense" fill="#3b82f6" radius={4} />
+                      </BarChart>
                 </ChartContainer>
               </CardContent>
             </Card>

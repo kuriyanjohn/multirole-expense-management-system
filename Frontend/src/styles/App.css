@@ -24,7 +24,7 @@
   --color-office-supplies: #10b981;
   --color-entertainment: #f59e0b;
   --color-utilities: #8b5cf6;
-  --color-expense: #3b82f6;
+  --color-expense: hsl(219, 10%, 54%);;
 }
 
 /* Reset and global styles */
