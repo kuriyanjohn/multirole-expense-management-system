@@ -81,6 +81,8 @@ const getMyExpenses = async (req, res) => {
 };
 const getEmployeeDashboardData = async (req, res) => {
   try {
+    console.log('employeedashboard');
+    
     const expenses = await Expense.find({ createdBy: req.user._id });
 
     // Total amount spent

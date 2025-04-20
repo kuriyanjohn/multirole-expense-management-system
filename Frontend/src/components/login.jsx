@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // ✅ import useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import authService from '../services/authService.js';
 
 const Login = ({ onLogin }) => {
-  const navigate = useNavigate(); // ✅ initialize navigate
+  const navigate = useNavigate(); 
 
   const [user, setUser] = useState('');
   const [email, setEmail] = useState('');
@@ -15,15 +15,14 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await authService.loginUser({ email, password });
+      const res = await authService.loginUser({ email, password ,role});
       console.log('resdata', res);
 
       const { user, token } = res;
       setUser(user);
-      onLogin(user); // ✅ Update parent state
+      onLogin(user); 
       localStorage.setItem('token', token);
 
-      // ✅ Navigate based on role
       if (user.role === 'admin') {
         navigate('/adminDashboard');
       } else if (user.role === 'manager') {
@@ -62,7 +61,7 @@ const Login = ({ onLogin }) => {
           onChange={(e) => setRole(e.target.value)}
           className="w-full px-4 py-2 border rounded"
         >
-          <option value="employee">User</option>
+          <option value="employee">Employee</option>
           <option value="manager">Manager</option>
           <option value="admin">Admin</option>
         </select>

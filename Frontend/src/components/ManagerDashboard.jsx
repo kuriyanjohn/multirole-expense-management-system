@@ -4,82 +4,73 @@ import {
   Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
 import { 
-  Check, X, Edit, Trash2, Upload, Filter, Bell, 
-  PieChart as PieChartIcon, Users, Calendar, DollarSign, 
-  AlertTriangle, Settings, ChevronDown
+  Check, X, Edit, Trash2, Upload, Filter, Settings, DollarSign, 
+  AlertTriangle, Users, PieChart as PieChartIcon
 } from 'lucide-react';
-import axios from 'axios';
-
-
-
 
 const ManagerDashboard = () => {
-  const [Users,setUsers]=useState([])
-  const [categories,setCategories]=useState([])
+  const [users,setUsers]=useState([])
   const [expenses, setExpenses] = useState([]);
-  const [selectedBudget,setSelectedBudget] = useState([])
-  const [selectedExpense,setSelectedExpense]=useState([])
   const [teamBudgets, setTeamBudgets] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState('All Teams');
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [selectedStatus, setSelectedStatus] = useState('All Statuses');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  let isNotificationsOpen=true
-  let isExpenseModalOpen=true
-  let isBudgetModalOpen=true
-  let setIsBudgetModalOpen=true
-  let setIsExpenseModalOpen=true
-
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState(null);
+  const [selectedBudget, setSelectedBudget] = useState(null);
+  
+  // Mock data - in a real app, this would come from API
+  const categories = ['Travel', 'Meals', 'Office Supplies', 'Software', 'Hardware', 'Entertainment', 'Other'];
+  // const users = [
+  //   { id: 1, name: 'John Smith', team: 'Engineering' },
+  //   { id: 2, name: 'Sarah Lee', team: 'Engineering' },
+  //   { id: 3, name: 'Mike Johnson', team: 'Marketing' },
+  //   { id: 4, name: 'Lisa Wong', team: 'Marketing' },
+  //   { id: 5, name: 'David Chen', team: 'Sales' },
+  //   { id: 6, name: 'Emma Garcia', team: 'Sales' }
+  // ];
 
   useEffect(() => {
-    const fetchData = async () => { 
-      try {
-        const [expenseRes, budgetRes, notifyRes] = await Promise.all([
-          axios.get('/api/manager/expenses'),
-          axios.get('/api/manager/budgets'),
-          axios.get('/api/manager/notifications'),
-        ]);
-        setExpenses(expenseRes.data);
-        setTeamBudgets(budgetRes.data);
-        setNotifications(notifyRes.data);
-      } catch (err) {
-        console.error('Error fetching manager data:', err);
-      }
-    };
-
-    fetchData();
+    // Mock API call to fetch expenses
+    const mockExpenses = [
+      { id: 101, employeeId: 1, employeeName: 'John Smith', team: 'Engineering', amount: 350.75, category: 'Travel', date: '2025-04-10', project: 'Backend Refactor', status: 'pending', notes: 'Flight to conference' },
+      { id: 102, employeeId: 2, employeeName: 'Sarah Lee', team: 'Engineering', amount: 45.30, category: 'Meals', date: '2025-04-12', project: 'Client Meeting', status: 'approved', notes: 'Lunch with client' },
+      { id: 103, employeeId: 3, employeeName: 'Mike Johnson', team: 'Marketing', amount: 125.00, category: 'Software', date: '2025-04-15', project: 'Campaign Tools', status: 'pending', notes: 'Monthly subscription' },
+      { id: 104, employeeId: 4, employeeName: 'Lisa Wong', team: 'Marketing', amount: 89.99, category: 'Office Supplies', date: '2025-04-16', project: '', status: 'rejected', notes: 'Printer ink' },
+      { id: 105, employeeId: 5, employeeName: 'David Chen', team: 'Sales', amount: 250.00, category: 'Entertainment', date: '2025-04-17', project: 'Client Dinner', status: 'pending', notes: 'Dinner with potential client' }
+    ];
+    
+    // Mock API call to fetch team budgets
+    const mockBudgets = [
+      { team: 'Engineering', budget: 10000, spent: 3500, remaining: 6500 },
+      { team: 'Marketing', budget: 8000, spent: 4200, remaining: 3800 },
+      { team: 'Sales', budget: 12000, spent: 5800, remaining: 6200 }
+    ];
+    
+    setExpenses(mockExpenses);
+    setTeamBudgets(mockBudgets);
   }, []);
   
+  const teams = ['All Teams', ...Array.from(new Set(users.map(employee => employee.team)))];
   
-  // Get array of all teams
-  const teams = ['All Teams', ...Array.from(new Set(Users.map(employee => employee.team)))];
-  
-  // Calculate statistics
-  const pendingExpenses = expenses.filter(expense => expense.status === 'pending').length;
   const pendingAmount = expenses
     .filter(expense => expense.status === 'pending')
     .reduce((sum, expense) => sum + expense.amount, 0);
   
-  // Filter expenses based on selected filters
+  const pendingExpenses = expenses.filter(expense => expense.status === 'pending').length;
+    
   const filteredExpenses = expenses.filter(expense => {
-    // Filter by team
     if (selectedTeam !== 'All Teams' && expense.team !== selectedTeam) return false;
-    
-    // Filter by status
     if (selectedStatus !== 'All Statuses' && expense.status !== selectedStatus.toLowerCase()) return false;
-    
-    // Filter by category
     if (selectedCategory !== 'All Categories' && expense.category !== selectedCategory) return false;
-    
-    // Filter by date range
     if (dateRange.start && new Date(expense.date) < new Date(dateRange.start)) return false;
     if (dateRange.end && new Date(expense.date) > new Date(dateRange.end)) return false;
-    
     return true;
   });
-
-  // Prepare data for charts
+  
+  // Data for charts
   const categoryData = categories.map(category => {
     const amount = filteredExpenses
       .filter(expense => expense.category === category)
@@ -87,56 +78,34 @@ const ManagerDashboard = () => {
     
     return { name: category, value: amount };
   }).filter(item => item.value > 0);
-
-  const employeeData = Users.map(employee => {
+  
+  const employeeData = users.map(employee => {
     const amount = filteredExpenses
       .filter(expense => expense.employeeId === employee.id)
       .reduce((sum, expense) => sum + expense.amount, 0);
     
     return { name: employee.name, amount };
   }).filter(item => item.amount > 0);
-
-  // Handle expense approval/rejection
+  
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#5DADE2', '#48C9B0'];
+  
+  // Expense handlers
   const handleApproveExpense = (id) => {
     setExpenses(expenses.map(expense => 
       expense.id === id ? { ...expense, status: 'approved' } : expense
     ));
-    
-    // Simulate notification
-    addNotification(`Expense #${id} approved`, 'Notification sent to employee');
   };
   
   const handleRejectExpense = (id) => {
     setExpenses(expenses.map(expense => 
       expense.id === id ? { ...expense, status: 'rejected' } : expense
     ));
-    
-    // Simulate notification
-    addNotification(`Expense #${id} rejected`, 'Notification sent to employee');
   };
-
-  // Handle bulk actions
+  
   const handleBulkApprove = () => {
     setExpenses(expenses.map(expense => 
       expense.status === 'pending' ? { ...expense, status: 'approved' } : expense
     ));
-    
-    // Simulate notification
-    addNotification('Bulk approval completed', 'All pending expenses have been approved');
-  };
-
-  // Handle expense CRUD operations
-  const handleCreateExpense = (data) => {
-    const newExpense = {
-      id: expenses.length + 200,
-      ...data,
-      status: 'pending',
-      submitted: new Date().toISOString().substring(0, 10)
-    };
-    
-    setExpenses([...expenses, newExpense]);
-    setIsExpenseModalOpen(false);
-    addNotification('New expense created', `${data.amount} for ${data.category}`);
   };
   
   const handleUpdateExpense = (data) => {
@@ -145,103 +114,29 @@ const ManagerDashboard = () => {
     ));
     
     setIsExpenseModalOpen(false);
-    addNotification('Expense updated', `Expense #${data.id} has been updated`);
   };
   
   const handleDeleteExpense = (id) => {
     setExpenses(expenses.filter(expense => expense.id !== id));
-    addNotification('Expense deleted', `Expense #${id} has been deleted`);
-  };
-
-  // Handle budget operations
-  const handleUpdateBudget = (data) => {
-    // Update budget logic would go here
-    setIsBudgetModalOpen(false);
-    addNotification('Budget updated', `Budget for ${data.team} updated to $${data.budget}`);
-  };
-
-  // Notification handling
-  const addNotification = (title, message) => {
-    const newNotification = {
-      id: notifications.length + 300,
-      title,
-      message,
-      date: new Date().toISOString().substring(0, 10),
-      read: false
-    };
-    
-    setNotifications([newNotification, ...notifications]);
   };
   
-  const markNotificationsAsRead = () => {
-    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+  // Budget handlers
+  const handleUpdateBudget = (data) => {
+    const updatedBudgets = teamBudgets.map(budget => 
+      budget.team === data.team ? { ...budget, budget: data.budget, remaining: data.budget - budget.spent } : budget
+    );
+    setTeamBudgets(updatedBudgets);
+    setIsBudgetModalOpen(false);
   };
 
-  const unreadNotifications = notifications.filter(notification => !notification.read).length;
-
   return (
-    <div className="manager-dashboard">
-      {/* Header with notifications */}
-      <div className="dashboard-header">
-        <h1 className="dashboard-title">Manager Dashboard</h1>
-        <div className="dashboard-actions">
-          <div className="notification-wrapper">
-            <button 
-              className="btn btn-ghost notification-btn" 
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            >
-              <Bell size={20} />
-              {unreadNotifications > 0 && (
-                <span className="notification-badge">{unreadNotifications}</span>
-              )}
-            </button>
-            
-            {isNotificationsOpen && (
-              <div className="notification-dropdown">
-                <div className="notification-header">
-                  <h3>Notifications</h3>
-                  {unreadNotifications > 0 && (
-                    <button 
-                      className="btn btn-ghost btn-sm"
-                      onClick={markNotificationsAsRead}
-                    >
-                      Mark all as read
-                    </button>
-                  )}
-                </div>
-                
-                <div className="notification-list">
-                  {notifications.length === 0 ? (
-                    <p className="text-gray-500">No notifications</p>
-                  ) : (
-                    notifications.map(notification => (
-                      <div 
-                        key={notification.id} 
-                        className={`notification-item ${!notification.read ? 'unread' : ''}`}
-                      >
-                        <h4>{notification.title}</h4>
-                        <p>{notification.message}</p>
-                        <span className="notification-date">{notification.date}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Manager Dashboard</h1>
+        <div className="flex gap-4">
           <button 
-            className="btn btn-primary"
-            onClick={() => {
-              setSelectedExpense(null);
-              setIsExpenseModalOpen(true);
-            }}
-          >
-            New Expense
-          </button>
-          
-          <button 
-            className="btn btn-outline"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
             onClick={() => {
               setSelectedBudget(null);
               setIsBudgetModalOpen(true);
@@ -254,69 +149,74 @@ const ManagerDashboard = () => {
       </div>
       
       {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stats-card">
-          <div className="stats-icon">
-            <AlertTriangle size={24} className="text-yellow-600" />
-          </div>
-          <div className="stats-content">
-            <h3>{pendingExpenses}</h3>
-            <p>Pending Approvals</p>
-          </div>
-        </div>
-        
-        <div className="stats-card">
-          <div className="stats-icon">
-            <DollarSign size={24} className="text-blue-600" />
-          </div>
-          <div className="stats-content">
-            <h3>${pendingAmount.toFixed(2)}</h3>
-            <p>Pending Amount</p>
-          </div>
-        </div>
-        
-        {teamBudgets.filter(budget => 
-          selectedTeam === 'All Teams' || budget.team === selectedTeam
-        ).map(budget => (
-          <div key={budget.team} className="stats-card budget-card">
-            <div className="stats-content">
-              <div className="budget-header">
-                <h3>{budget.team}</h3>
-                <span className={budget.remaining / budget.budget < 0.2 ? 'text-red-500' : 'text-green-600'}>
-                  ${budget.remaining.toFixed(2)} remaining
-                </span>
-              </div>
-              <div className="budget-progress">
-                <div 
-                  className="budget-bar" 
-                  style={{ 
-                    width: `${(budget.spent / budget.budget) * 100}%`,
-                    backgroundColor: budget.spent / budget.budget > 0.8 ? '#ef4444' : '#3b82f6'
-                  }}
-                />
-              </div>
-              <div className="budget-details">
-                <span>${budget.spent.toFixed(2)} of ${budget.budget.toFixed(2)}</span>
-                <span>{((budget.spent / budget.budget) * 100).toFixed(0)}%</span>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  {/* Pending Approvals Box */}
+  <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
+    <div className="flex items-center">
+      <div className="bg-yellow-100 p-3 rounded-full mr-4">
+        <AlertTriangle size={24} className="text-yellow-600" />
       </div>
+      <div>
+        <h3 className="text-2xl font-bold">{pendingExpenses}</h3>
+        <p className="text-gray-500">Pending Approvals</p>
+      </div>
+    </div>
+  </div>
+
+  {/* Pending Amount Box */}
+  <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
+    <div className="flex items-center">
+      <div className="bg-blue-100 p-3 rounded-full mr-4">
+        <DollarSign size={24} className="text-blue-600" />
+      </div>
+      <div>
+        <h3 className="text-2xl font-bold">${pendingAmount.toFixed(2)}</h3>
+        <p className="text-gray-500">Pending Amount</p>
+      </div>
+    </div>
+  </div>
+
+  {/* Team Budget Box */}
+  {teamBudgets.filter(budget =>
+    selectedTeam === 'All Teams' || budget.team === selectedTeam
+  ).slice(0, 1).map(budget => (
+    <div key={budget.team} className="bg-white border border-gray-200 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold">{budget.team}</h3>
+        <span className={budget.remaining / budget.budget < 0.2 ? 'text-red-500' : 'text-green-600'}>
+          ${budget.remaining.toFixed(2)} remaining
+        </span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+        <div
+          className="h-2.5 rounded-full"
+          style={{
+            width: `${(budget.spent / budget.budget) * 100}%`,
+            backgroundColor: budget.spent / budget.budget > 0.8 ? '#ef4444' : '#3b82f6'
+          }}
+        />
+      </div>
+      <div className="flex justify-between text-sm text-gray-500">
+        <span>${budget.spent.toFixed(2)} of ${budget.budget.toFixed(2)}</span>
+        <span>{((budget.spent / budget.budget) * 100).toFixed(0)}%</span>
+      </div>
+    </div>
+  ))}
+</div>
+
       
       {/* Filters */}
-      <div className="filters-section">
-        <div className="filters-header">
-          <h2>
-            <Filter size={18} className="mr-2" />
-            Filters
-          </h2>
+      <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <div className="flex items-center mb-4">
+          <Filter size={18} className="mr-2" />
+          <h2 className="text-xl font-bold">Filters</h2>
         </div>
         
-        <div className="filters-grid">
-          <div className="filter-group">
-            <label>Team</label>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
             <select 
+              className="w-full border border-gray-300 rounded-md p-2"
               value={selectedTeam} 
               onChange={(e) => setSelectedTeam(e.target.value)}
             >
@@ -326,9 +226,10 @@ const ManagerDashboard = () => {
             </select>
           </div>
           
-          <div className="filter-group">
-            <label>Status</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select 
+              className="w-full border border-gray-300 rounded-md p-2"
               value={selectedStatus} 
               onChange={(e) => setSelectedStatus(e.target.value)}
             >
@@ -339,9 +240,10 @@ const ManagerDashboard = () => {
             </select>
           </div>
           
-          <div className="filter-group">
-            <label>Category</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
             <select 
+              className="w-full border border-gray-300 rounded-md p-2"
               value={selectedCategory} 
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
@@ -352,108 +254,105 @@ const ManagerDashboard = () => {
             </select>
           </div>
           
-          <div className="filter-group">
-            <label>From</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
             <input 
               type="date" 
+              className="w-full border border-gray-300 rounded-md p-2"
               value={dateRange.start} 
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
             />
           </div>
           
-          <div className="filter-group">
-            <label>To</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
             <input 
               type="date" 
+              className="w-full border border-gray-300 rounded-md p-2"
               value={dateRange.end} 
               onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
             />
           </div>
-          
-          <div className="filter-actions">
-            <button 
-              className="btn btn-outline"
-              onClick={() => {
-                setSelectedTeam('All Teams');
-                setSelectedStatus('All Statuses');
-                setSelectedCategory('All Categories');
-                setDateRange({ start: '', end: '' });
-              }}
-            >
-              Clear Filters
-            </button>
-          </div>
+        </div>
+        
+        <div className="mt-4 flex justify-end">
+          <button 
+            className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md"
+            onClick={() => {
+              setSelectedTeam('All Teams');
+              setSelectedStatus('All Statuses');
+              setSelectedCategory('All Categories');
+              setDateRange({ start: '', end: '' });
+            }}
+          >
+            Clear Filters
+          </button>
         </div>
       </div>
       
-      {/* Charts Section */}
-      <div className="charts-section">
-        <div className="charts-grid">
-          <div className="chart-card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <PieChartIcon size={18} className="mr-2" />
-                Expenses by Category
-              </h3>
-            </div>
-            <div className="card-content">
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                      nameKey="name"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center mb-4">
+            <PieChartIcon size={18} className="mr-2" />
+            <h3 className="text-xl font-bold">Expenses by Category</h3>
           </div>
           
-          <div className="chart-card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <Users size={18} className="mr-2" />
-                Expenses by Employee
-              </h3>
-            </div>
-            <div className="card-content">
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={employeeData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
-                    <Legend />
-                    <Bar dataKey="amount" fill="#3b82f6" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center mb-4">
+            <Users size={18} className="mr-2" />
+            <h3 className="text-xl font-bold">Expenses by Employee</h3>
+          </div>
+          
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={employeeData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                <Legend />
+                <Bar dataKey="amount" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
       
       {/* Pending Expenses Table */}
-      <div className="expenses-section">
-        <div className="section-header">
-          <h2>Pending Approvals</h2>
+      <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Pending Approvals</h2>
           {filteredExpenses.some(expense => expense.status === 'pending') && (
-            <button className="btn btn-outline" onClick={handleBulkApprove}>
+            <button 
+              className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md flex items-center"
+              onClick={handleBulkApprove}
+            >
               <Check size={16} className="mr-2" />
               Approve All
             </button>
@@ -461,55 +360,60 @@ const ManagerDashboard = () => {
         </div>
         
         {filteredExpenses.filter(expense => expense.status === 'pending').length === 0 ? (
-          <div className="empty-state">
+          <div className="text-center p-8 text-gray-500">
             <p>No pending expenses to approve</p>
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="expense-table">
-              <thead>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th>Employee</th>
-                  <th>Date</th>
-                  <th>Category</th>
-                  <th>Project</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th className="p-3 text-left">Employee</th>
+                  <th className="p-3 text-left">Date</th>
+                  <th className="p-3 text-left">Category</th>
+                  <th className="p-3 text-left">Project</th>
+                  <th className="p-3 text-left">Amount</th>
+                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredExpenses
                   .filter(expense => expense.status === 'pending')
                   .map(expense => (
-                    <tr key={expense.id}>
-                      <td>{expense.employeeName}</td>
-                      <td>{expense.date}</td>
-                      <td>{expense.category}</td>
-                      <td>{expense.project || '—'}</td>
-                      <td>${expense.amount.toFixed(2)}</td>
-                      <td>
-                        <span className="badge badge-outline">Pending</span>
+                    <tr key={expense.id} className="border-b border-gray-200">
+                      <td className="p-3">{expense.employeeName}</td>
+                      <td className="p-3">{expense.date}</td>
+                      <td className="p-3">{expense.category}</td>
+                      <td className="p-3">{expense.project || '—'}</td>
+                      <td className="p-3">${expense.amount.toFixed(2)}</td>
+                      <td className="p-3">
+                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                          Pending
+                        </span>
                       </td>
-                      <td className="actions-cell">
+                      <td className="p-3 flex gap-2">
                         <button 
-                          className="btn btn-ghost action-btn approve"
+                          className="p-1 text-green-600 hover:bg-green-100 rounded"
                           onClick={() => handleApproveExpense(expense.id)}
+                          title="Approve"
                         >
                           <Check size={16} />
                         </button>
                         <button 
-                          className="btn btn-ghost action-btn reject"
+                          className="p-1 text-red-600 hover:bg-red-100 rounded"
                           onClick={() => handleRejectExpense(expense.id)}
+                          title="Reject"
                         >
                           <X size={16} />
                         </button>
                         <button 
-                          className="btn btn-ghost action-btn"
+                          className="p-1 text-blue-600 hover:bg-blue-100 rounded"
                           onClick={() => {
                             setSelectedExpense(expense);
                             setIsExpenseModalOpen(true);
                           }}
+                          title="Edit"
                         >
                           <Edit size={16} />
                         </button>
@@ -523,61 +427,65 @@ const ManagerDashboard = () => {
       </div>
       
       {/* All Expenses Table */}
-      <div className="expenses-section">
-        <div className="section-header">
-          <h2>All Expenses</h2>
+      <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">All Transactions</h2>
         </div>
         
         {filteredExpenses.length === 0 ? (
-          <div className="empty-state">
+          <div className="text-center p-8 text-gray-500">
             <p>No expenses found matching your filters</p>
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="expense-table">
-              <thead>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th>Employee</th>
-                  <th>Date</th>
-                  <th>Category</th>
-                  <th>Project</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th className="p-3 text-left">Employee</th>
+                  <th className="p-3 text-left">Team</th>
+                  <th className="p-3 text-left">Date</th>
+                  <th className="p-3 text-left">Category</th>
+                  <th className="p-3 text-left">Project</th>
+                  <th className="p-3 text-left">Amount</th>
+                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredExpenses.map(expense => (
-                  <tr key={expense.id}>
-                    <td>{expense.employeeName}</td>
-                    <td>{expense.date}</td>
-                    <td>{expense.category}</td>
-                    <td>{expense.project || '—'}</td>
-                    <td>${expense.amount.toFixed(2)}</td>
-                    <td>
-                      <span className={`badge badge-${
+                  <tr key={expense.id} className="border-b border-gray-200">
+                    <td className="p-3">{expense.employeeName}</td>
+                    <td className="p-3">{expense.team}</td>
+                    <td className="p-3">{expense.date}</td>
+                    <td className="p-3">{expense.category}</td>
+                    <td className="p-3">{expense.project || '—'}</td>
+                    <td className="p-3">${expense.amount.toFixed(2)}</td>
+                    <td className="p-3">
+                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
                         expense.status === 'approved' 
-                          ? 'success' 
+                          ? 'bg-green-100 text-green-800' 
                           : expense.status === 'rejected' 
-                          ? 'destructive' 
-                          : 'outline'
+                          ? 'bg-red-100 text-red-800' 
+                          : 'bg-yellow-100 text-yellow-800'
                       }`}>
                         {expense.status.charAt(0).toUpperCase() + expense.status.slice(1)}
                       </span>
                     </td>
-                    <td className="actions-cell">
+                    <td className="p-3 flex gap-2">
                       <button 
-                        className="btn btn-ghost action-btn"
+                        className="p-1 text-blue-600 hover:bg-blue-100 rounded"
                         onClick={() => {
                           setSelectedExpense(expense);
                           setIsExpenseModalOpen(true);
                         }}
+                        title="Edit"
                       >
                         <Edit size={16} />
                       </button>
                       <button 
-                        className="btn btn-ghost action-btn delete"
+                        className="p-1 text-red-600 hover:bg-red-100 rounded"
                         onClick={() => handleDeleteExpense(expense.id)}
+                        title="Delete"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -590,334 +498,267 @@ const ManagerDashboard = () => {
         )}
       </div>
       
+      {/* Team Budget Overview */}
+      <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Team Budgets</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {teamBudgets.map(budget => (
+            <div key={budget.team} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-bold">{budget.team}</h3>
+                <button 
+                  className="text-blue-600 hover:bg-blue-100 p-1 rounded"
+                  onClick={() => {
+                    setSelectedBudget(budget);
+                    setIsBudgetModalOpen(true);
+                  }}
+                >
+                  <Edit size={16} />
+                </button>
+              </div>
+              
+              <div className="mb-2">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Budget: <strong>${budget.budget.toFixed(2)}</strong></span>
+                  <span className={budget.remaining / budget.budget < 0.2 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'}>
+                    ${budget.remaining.toFixed(2)} remaining
+                  </span>
+                </div>
+                
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="h-2.5 rounded-full" 
+                    style={{ 
+                      width: `${(budget.spent / budget.budget) * 100}%`,
+                      backgroundColor: budget.spent / budget.budget > 0.8 ? '#ef4444' : '#3b82f6'
+                    }}
+                  />
+                </div>
+                
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Spent: ${budget.spent.toFixed(2)}</span>
+                  <span>{((budget.spent / budget.budget) * 100).toFixed(0)}% used</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
       {/* Expense Modal */}
       {isExpenseModalOpen && (
-        <ExpenseModal
-          expense={selectedExpense}
-          employees={Users}
-          categories={categories}
-          onSave={selectedExpense ? handleUpdateExpense : handleCreateExpense}
-          onClose={() => setIsExpenseModalOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">
+                {selectedExpense ? 'Edit Expense' : 'Create Expense'}
+              </h2>
+              <button 
+                className="text-gray-500 hover:text-gray-700" 
+                onClick={() => setIsExpenseModalOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleUpdateExpense({
+                ...selectedExpense,
+                // In a real app, we'd update with form values
+              });
+            }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Employee
+                  </label>
+                  <select
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    defaultValue={selectedExpense?.employeeId || ""}
+                    disabled
+                  >
+                    <option value="">Select Employee</option>
+                    {users.map(employee => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.name} ({employee.team})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    defaultValue={selectedExpense?.amount || ""}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    defaultValue={selectedExpense?.category || ""}
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map(category => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    defaultValue={selectedExpense?.status || "pending"}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <button 
+                  type="button"
+                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md"
+                  onClick={() => setIsExpenseModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
       
       {/* Budget Modal */}
       {isBudgetModalOpen && (
-        <BudgetModal
-          teams={teams.filter(team => team !== 'All Teams')}
-          budgets={teamBudgets}
-          selectedBudget={selectedBudget}
-          onSave={handleUpdateBudget}
-          onClose={() => setIsBudgetModalOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Manage Budget</h2>
+              <button 
+                className="text-gray-500 hover:text-gray-700" 
+                onClick={() => setIsBudgetModalOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              // Get the form data
+              const formData = new FormData(e.target);
+              const team = formData.get('team');
+              const budget = parseFloat(formData.get('budget'));
+              
+              // Find the current budget for this team
+              const currentBudget = teamBudgets.find(b => b.team === team);
+              
+              handleUpdateBudget({
+                team,
+                budget,
+                spent: currentBudget ? currentBudget.spent : 0,
+                remaining: budget - (currentBudget ? currentBudget.spent : 0)
+              });
+            }}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Team
+                </label>
+                <select
+                  name="team"
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  defaultValue={selectedBudget?.team || teams.find(t => t !== 'All Teams')}
+                >
+                  {teams.filter(team => team !== 'All Teams').map(team => (
+                    <option key={team} value={team}>
+                      {team}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Budget Amount
+                </label>
+                <input
+                  type="number"
+                  name="budget"
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  defaultValue={selectedBudget?.budget || ""}
+                  step="0.01"
+                  required
+                />
+              </div>
+              
+              {selectedBudget && (
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Currently Spent: <strong>${selectedBudget.spent.toFixed(2)}</strong></span>
+                    <span>Remaining: <strong>${selectedBudget.remaining.toFixed(2)}</strong></span>
+                  </div>
+                  
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div 
+                      className="h-2.5 rounded-full" 
+                      style={{ 
+                        width: `${(selectedBudget.spent / selectedBudget.budget) * 100}%`,
+                        backgroundColor: selectedBudget.spent / selectedBudget.budget > 0.8 ? '#ef4444' : '#3b82f6'
+                      }}
+                    />
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 mt-1">
+                    {((selectedBudget.spent / selectedBudget.budget) * 100).toFixed(0)}% of budget used
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <button 
+                  type="button"
+                  className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md"
+                  onClick={() => setIsBudgetModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                >
+                  Save Budget
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
-};
-
-// Expense Modal Component
-const ExpenseModal = ({ expense, employees, categories, onSave, onClose }) => {
-  const [formData, setFormData] = useState(
-    expense 
-      ? { ...expense }
-      : {
-          employeeId: '',
-          employeeName: '',
-          amount: '',
-          category: '',
-          project: '',
-          date: new Date().toISOString().substring(0, 10),
-          notes: '',
-          receipt: '',
-          team: '',
-        }
-  );
-  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    
-    // If employee is selected, automatically set team
-    if (name === 'employeeId') {
-      const selectedEmployee = employees.find(emp => emp.id === parseInt(value));
-      if (selectedEmployee) {
-        setFormData({
-          ...formData, 
-          employeeId: parseInt(value),
-          employeeName: selectedEmployee.name,
-          team: selectedEmployee.team
-        });
-      }
-    }
-  };
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave({
-      ...formData,
-      amount: parseFloat(formData.amount)
-    });
-  };
-  
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2>{expense ? 'Edit Expense' : 'Create Expense'}</h2>
-          <button className="btn btn-ghost" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Employee</label>
-              <select
-                name="employeeId"
-                value={formData.employeeId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Employee</option>
-                {employees.map(employee => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.name} ({employee.team})
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="form-group">
-              <label>Amount</label>
-              <input
-                type="number"
-                name="amount"
-                step="0.01"
-                value={formData.amount}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Category</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Category</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="form-group">
-              <label>Date</label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Project/Client (Optional)</label>
-              <input
-                type="text"
-                name="project"
-                value={formData.project}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Status</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-              >
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label>Notes</label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Receipt</label>
-            <div className="file-input-wrapper">
-              <input
-                type="file"
-                id="receipt"
-                name="receipt"
-                className="file-input"
-              />
-              <label htmlFor="receipt" className="file-input-label">
-              <Upload size={16} className="mr-2" />
-              {formData.receipt ? formData.receipt : 'Upload Receipt'}
-            </label>
-          </div>
-        </div>
-        
-        <div className="modal-actions">
-          <button type="button" className="btn btn-outline" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit" className="btn btn-primary">
-            {expense ? 'Save Changes' : 'Create Expense'}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-);
-};
-
-// Budget Modal Component
-const BudgetModal = ({ teams, budgets, selectedBudget, onSave, onClose }) => {
-const [formData, setFormData] = useState(
-  selectedBudget 
-    ? { ...selectedBudget }
-    : {
-        team: teams[0] || '',
-        budget: '',
-        spent: 0,
-        remaining: 0
-      }
-);
-
-useEffect(() => {
-  // If team changes, find existing budget data
-  if (formData.team) {
-    const existingBudget = budgets.find(b => b.team === formData.team);
-    if (existingBudget) {
-      setFormData({
-        ...formData,
-        budget: existingBudget.budget,
-        spent: existingBudget.spent,
-        remaining: existingBudget.budget - existingBudget.spent
-      });
-    }
-  }
-}, [formData.team, budgets]);
-
-const handleChange = (e) => {
-  const { name, value } = e.target;
-  
-  if (name === 'budget') {
-    const budget = parseFloat(value) || 0;
-    const remaining = budget - formData.spent;
-    setFormData({ 
-      ...formData, 
-      budget,
-      remaining
-    });
-  } else {
-    setFormData({ ...formData, [name]: value });
-  }
-};
-
-const handleSubmit = (e) => {
-  e.preventDefault();
-  onSave({
-    ...formData,
-    budget: parseFloat(formData.budget)
-  });
-};
-
-return (
-  <div className="modal-overlay">
-    <div className="modal-content">
-      <div className="modal-header">
-        <h2>Manage Budget</h2>
-        <button className="btn btn-ghost" onClick={onClose}>
-          <X size={20} />
-        </button>
-      </div>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Team</label>
-            <select
-              name="team"
-              value={formData.team}
-              onChange={handleChange}
-              required
-            >
-              {teams.map(team => (
-                <option key={team} value={team}>
-                  {team}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="form-group">
-            <label>Budget Amount</label>
-            <input
-              type="number"
-              name="budget"
-              step="0.01"
-              value={formData.budget}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-        
-        {formData.spent > 0 && (
-          <div className="budget-status">
-            <div className="budget-info">
-              <p>Amount Spent: <strong>${formData.spent.toFixed(2)}</strong></p>
-              <p>Remaining: <strong>${formData.remaining.toFixed(2)}</strong></p>
-            </div>
-            <div className="budget-progress">
-              <div 
-                className="budget-bar" 
-                style={{ 
-                  width: `${(formData.spent / formData.budget) * 100}%`,
-                  backgroundColor: formData.spent / formData.budget > 0.8 ? '#ef4444' : '#3b82f6'
-                }}
-              />
-            </div>
-            <p className="text-sm text-gray-500">
-              {((formData.spent / formData.budget) * 100).toFixed(0)}% of budget used
-            </p>
-          </div>
-        )}
-        
-        <div className="modal-actions">
-          <button type="button" className="btn btn-outline" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit" className="btn btn-primary">
-            Save Budget
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-);
 };
 
 export default ManagerDashboard;

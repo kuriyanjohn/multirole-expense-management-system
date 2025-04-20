@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import * as jwt_decode from "jwt-decode";
+import React, { useState,useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -17,10 +18,24 @@ import './styles/app.css';
 const App = () => {
   const [user, setUser] = useState(null);
 
-  const [expenses] = useState([
-    { description: 'Office Supplies', amount: 1500, date: '2025-04-01' },
-    { description: 'Travel', amount: 3200, date: '2025-04-03' },
-  ]);
+  // Restore user from token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwt_decode(token);
+        const now = Date.now() / 1000;
+        if (decoded.exp > now) {
+          setUser({ id: decoded.id, role: decoded.role });
+        } else {
+          localStorage.removeItem("token");
+        }
+      } catch (error) {
+        console.error("Invalid token", error);
+        localStorage.removeItem("token");
+      }
+    }
+  }, []);
 
   const ProtectedRoute = ({ children, allowedRoles }) => {
     if (!user) return <Navigate to="/login" />;
@@ -32,18 +47,21 @@ const App = () => {
     <Router>
       <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
-        {/* Public routes */}
+        {/* Public Routes */}
         <Route path="/login" element={<Login onLogin={setUser} />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Role-specific dashboard routes */}
+        {/* Role-Based Routes */}
         <Route
           path="/AdminDashboard"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={["admin"]}>
               <div className="flex h-screen">
                 <div className="flex flex-col flex-1">
-                <Header onLogout={() => setUser(null)} />
+                  <Header onLogout={() => {
+                    setUser(null);
+                    localStorage.removeItem("token");
+                  }} />
                   <main className="p-4 overflow-y-auto">
                     <AdminDashboard user={user} />
                   </main>
@@ -56,10 +74,13 @@ const App = () => {
         <Route
           path="/ManagerDashboard"
           element={
-            <ProtectedRoute allowedRoles={['manager']}>
+            <ProtectedRoute allowedRoles={["manager"]}>
               <div className="flex h-screen">
                 <div className="flex flex-col flex-1">
-                <Header onLogout={() => setUser(null)} />
+                  <Header onLogout={() => {
+                    setUser(null);
+                    localStorage.removeItem("token");
+                  }} />
                   <main className="p-4 overflow-y-auto">
                     <ManagerDashboard user={user} />
                   </main>
@@ -72,20 +93,23 @@ const App = () => {
         <Route
           path="/EmployeeDashboard"
           element={
-            <ProtectedRoute allowedRoles={['employee']}>
+            <ProtectedRoute allowedRoles={["employee"]}>
               <div className="flex h-screen">
                 <div className="flex flex-col flex-1">
-                <Header onLogout={() => setUser(null)} />
+                  <Header onLogout={() => {
+                    setUser(null);
+                    localStorage.removeItem("token");
+                  }} />
                   <main className="p-4 overflow-y-auto">
                     <EmployeeDashboard user={user} />
                   </main>
                 </div>
               </div>
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         />
 
-        {/* Default fallback */}
+        {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>

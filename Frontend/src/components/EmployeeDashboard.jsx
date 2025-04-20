@@ -1,4 +1,4 @@
-@d"use client"
+"use client"
 
 import { useState,useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
@@ -8,7 +8,7 @@ import Textarea from "../components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Badge, badgeVariants } from "../components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,DialogDescription  } from "../components/ui/dialog"
 import Label from "../components/ui/label"
 import axios from "axios";
 import { toast } from 'react-toastify';
@@ -68,10 +68,10 @@ const EmployeeDashboard = ({ userRole = "employee" }) => {
     fetchDashboardData();
   }, []);
   const [expenses, setExpenses] = useState([]);
-const [pieData, setPieChartData] = useState([]);
-const [barData, setBarChartData] = useState([]);
-const [totalSpent, setTotalSpent] = useState(0);
-const [expenseCount, setExpenseCount] = useState(0);
+  const [pieData, setPieChartData] = useState([]);
+  const [barData, setBarChartData] = useState([]);
+  const [totalSpent, setTotalSpent] = useState(0);
+  const [expenseCount, setExpenseCount] = useState(0);
   const [activeTab, setActiveTab] = useState("dashboard")
   const [showNotification, setShowNotification] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
@@ -158,10 +158,9 @@ const handleUpdate = async () => {
       if (value) formData.append(key, value);
     });
 
-    if (receiptFile) formData.append("receipt", receiptFile);
+    if (true) formData.append("receipt", receiptFile);
 
-    const res = await fetch(`/api/employee/expense/${editingExpense._id}`, {
-      method: "PUT",
+    const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/employee/expense/${editingExpense._id}`, {
       headers: {
         Authorization: `Bearer ${token}`, 
       },
@@ -189,21 +188,23 @@ const handleDelete = async (id) => {
     const confirm = window.confirm("Are you sure you want to delete this expense?");
     if (!confirm) return;
 
-    const res = await fetch(`/api/employee/expenses/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await axios.delete(
+      `${import.meta.env.VITE_API_URL}/api/employee/expenses/${id}`,
+      
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
 
-    if (res.ok) {
+
       setExpenses((prev) => prev.filter((e) => e._id !== id));
       toast.success("Expense deleted");
-    } else {
-      toast.error("Failed to delete expense");
     }
-  } catch (error) {
+    catch (error) {
     console.error("Delete error:", error);
+    toast.error("Failed to delete expense");
   }
 };
 
@@ -433,105 +434,50 @@ const handleDelete = async (id) => {
                         </td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEdit(expense)}
-                                  disabled={expense.status !== "pending"}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit Expense</DialogTitle>
-                                
-                              </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="edit-amount">Amount</Label>
-                                      <Input
-                                        id="edit-amount"
-                                        name="amount"
-                                        type="number"
-                                        value={expenseForm.amount}
-                                        onChange={handleInputChange}
-                                      />
-                                    </div>
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="edit-date">Date</Label>
-                                      <Input
-                                        id="edit-date"
-                                        name="date"
-                                        type="date"
-                                        value={expenseForm.date}
-                                        onChange={handleInputChange}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="edit-category">Category</Label>
-                                      <Select
-                                        value={expenseForm.category}
-                                        onValueChange={(value) => handleSelectChange("category", value)}
-                                      >
-                                        <SelectTrigger id="edit-category">
-                                          <SelectValue placeholder="Select category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {categories.map((category) => (
-                                            <SelectItem key={category} value={category}>
-                                              {category}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="edit-project">Project/Client</Label>
-                                      <Select
-                                        value={expenseForm.project}
-                                        onValueChange={(value) => handleSelectChange("project", value)}
-                                      >
-                                        <SelectTrigger id="edit-project">
-                                          <SelectValue placeholder="Select project" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {projects.map((project) => (
-                                            <SelectItem key={project} value={project}>
-                                              {project}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-                                  <div className="grid gap-2">
-                                    <Label htmlFor="edit-notes">Notes</Label>
-                                    <Textarea
-                                      id="edit-notes"
-                                      name="notes"
-                                      value={expenseForm.notes}
-                                      onChange={handleInputChange}
-                                    />
-                                  </div>
-                                  <div className="grid gap-2">
-                                    <Label htmlFor="edit-receipt">Receipt (Optional)</Label>
-                                    <Input id="edit-receipt" type="file" onChange={handleFileChange} />
-                                  </div>
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="outline" onClick={() => setEditingExpense(null)}>
-                                    Cancel
-                                  </Button>
-                                  <Button onClick={handleUpdate}>Update</Button>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
+                          {/* // Updated Dialog usage in EmployeeDashboard.jsx */}
+<Dialog>
+  <DialogTrigger asChild>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => handleEdit(expense)}
+      disabled={expense.status !== "pending"}
+    >
+      <Edit className="h-4 w-4" />
+    </Button>
+  </DialogTrigger>
+  <DialogContent aria-describedby="edit-expense-description">
+    <DialogHeader>
+      <DialogTitle>Edit Expense</DialogTitle>
+      <DialogDescription id="edit-expense-description">
+        Make changes to your expense record below.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="grid gap-4 py-4">
+      {/* Your form fields remain the same */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="edit-amount">Amount</Label>
+          <Input
+            id="edit-amount"
+            name="amount"
+            type="number"
+            value={expenseForm.amount}
+            onChange={handleInputChange}
+          />
+        </div>
+        {/* Rest of your form fields */}
+      </div>
+      {/* ... */}
+    </div>
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" onClick={() => setEditingExpense(null)}>
+        Cancel
+      </Button>
+      <Button onClick={handleUpdate}>Update</Button>
+    </div>
+  </DialogContent>
+</Dialog>
                             <Button
                               variant="ghost"
                               size="sm"

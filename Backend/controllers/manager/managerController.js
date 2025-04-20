@@ -1,6 +1,7 @@
 const Expense = require('../../models/expenseModel');
 const  TeamBudget=require('../../models/teamBudget')
 const User = require('../../models/User');
+const Category=require('../../models/category')
 
 
 
@@ -51,9 +52,11 @@ const getManagerExpenses = async (req, res) => {
   };
   const getManagerDashboard = async (req, res) => {
     try {
+      console.log('managerdashboard');
+      
       const managerId = req.user.id;
       const manager = await User.findById(managerId).select('-password');
-  
+      
       if (!manager || manager.role !== 'manager') {
         return res.status(403).json({ error: 'Access denied. Not a manager.' });
       }
@@ -63,25 +66,35 @@ const getManagerExpenses = async (req, res) => {
       // Fetch data
       const expenses = await Expense.find({ team });
       const teamBudgets = await TeamBudget.find({ team });
-      const notifications = await Notification.find({ role: 'manager' });
-      const users = await User.find({ team }).select('-password');
+      
+      // const notifications = await Notification.find({ role: 'manager' });
       const categories = await Category.find();
+      
+      const users = await User.find({roll:'employee' }).select('-password');
+      console.log('users',users);
+      
+      
+      // Get these IDs from request parameters or query
+      const selectedExpenseId = req.query.expenseId || null;
+      const selectedBudgetId = req.query.budgetId || null;
+      
       let selectedExpense = null;
       let selectedBudget = null;
+      
       if (selectedExpenseId) {
         selectedExpense = await Expense.findById(selectedExpenseId);
       }
       
-    if (selectedBudgetId) {
-      selectedBudget = await TeamBudget.findById(selectedBudgetId);
-    }
+      if (selectedBudgetId) {
+        selectedBudget = await TeamBudget.findById(selectedBudgetId);
+      }
   
       res.status(200).json({
         user: manager,
         users,
         expenses,
         teamBudgets,
-        notifications,
+        // notifications, // Uncomment after adding the import
         categories,
         selectedExpense,
         selectedBudget

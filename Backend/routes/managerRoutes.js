@@ -11,6 +11,6 @@ router.patch('/expenses/:id/approve',managerController.approveExpense);
 router.get('/expenses', managerController.getManagerExpenses);
 router.get('/budgets', managerController.getTeamBudgets);
 router.get('/notifications',managerController.getManagerNotifications);
-router.get('/dashboard',managerController.getManagerDashboard)
+router.get('/manager',managerController.getManagerDashboard)
 
 module.exports = router;

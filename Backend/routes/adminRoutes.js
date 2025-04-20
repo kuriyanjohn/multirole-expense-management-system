@@ -8,7 +8,7 @@ router.use(authorizeRoles('admin'));
 
 router.get('/expenses/all', adminController.getAllExpenses);
 router.get('/users', adminController.manageUsers);
-router.get('/dashboard', adminController.getAdminDashboardData);
+router.get('/admin', adminController.getAdminDashboardData);
 
 
 module.exports = router;
