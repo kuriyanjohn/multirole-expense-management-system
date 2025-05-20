@@ -24,7 +24,7 @@ const protect = async (req, res, next) => {
 
     req.user = user;
     console.log('Authenticated user:', req.user);
-    next();
+    // next();
   } catch (err) {
     console.error('Token error:', err.message);
     return res.status(401).json({ message: 'Token invalid or expired' });
@@ -32,11 +32,12 @@ const protect = async (req, res, next) => {
 };
 
 const authorizeRoles = (...roles) => {
+  console.log('authorizerole function',roles);
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({ message: 'Access denied: insufficient permissions' });
     }
-    next();
+    // next();
   };
 };
 

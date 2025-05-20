@@ -5,13 +5,10 @@ const employeeController= require('../controllers/employee/employeeController');
 const upload = require('../middlewares/uploadMiddleware');
 
 
-router.use(protect);
-router.use(authorizeRoles('employee'));
-
-router.post('/expenses', upload.single('receipt'), employeeController.addExpense);
-router.put('/expenses/:id', upload.single('receipt'), employeeController.editExpense);
-router.delete('/expenses/:id', employeeController.deleteExpense); 
-router.get('/expenses', employeeController.getMyExpenses);
-router.get('/dashboard',employeeController.getEmployeeDashboardData)
+router.post('/expenses', upload.single('receipt'),protect,authorizeRoles('employee'), employeeController.addExpense);
+router.put('/expenses/:id', upload.single('receipt'),protect,authorizeRoles('employee'), employeeController.editExpense);
+router.delete('/expenses/:id',protect,authorizeRoles('employee'), employeeController.deleteExpense); 
+router.get('/expenses',protect,authorizeRoles('employee'), employeeController.getMyExpenses);
+router.get('/dashboard',protect,authorizeRoles('employee'),employeeController.getEmployeeDashboardData)
 
 module.exports = router;

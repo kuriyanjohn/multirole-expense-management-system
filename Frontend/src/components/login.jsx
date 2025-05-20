@@ -7,7 +7,6 @@ import authService from '../services/authService.js';
 const Login = ({ onLogin }) => {
   const navigate = useNavigate(); 
 
-  const [user, setUser] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('employee');
@@ -19,7 +18,7 @@ const Login = ({ onLogin }) => {
       console.log('resdata', res);
 
       const { user, token } = res;
-      setUser(user);
+      // setUser(user);
       onLogin(user); 
       localStorage.setItem('token', token);
 
@@ -38,6 +37,7 @@ const Login = ({ onLogin }) => {
 
   return (
     <div className="flex items-center justify-center h-screen bg-blue-50">
+      
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md w-96 space-y-4">
         <h2 className="text-xl font-semibold text-center">Login</h2>
         <input
@@ -68,13 +68,15 @@ const Login = ({ onLogin }) => {
         <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
           Login
         </button>
-      </form>
+      </form> 
+      <div>
       <p className="text-sm text-center">
         Don't have an account?{' '}
         <Link to="/register" className="text-blue-600 hover:underline">
           Register here
         </Link>
       </p>
+      </div>
     </div>
   );
 };

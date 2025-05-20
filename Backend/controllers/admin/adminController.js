@@ -23,7 +23,7 @@ const getAdminDashboardData = async (req, res) => {
       console.log('admindashboard');
       
       const expenses = await Expense.find().populate('createdBy', 'name email team role');
-      const users = await User.find({}, 'name email role team company');
+      const users = await User.find({}, 'name email  role team company');
       const companies = await Company.find({}, 'name monthlyBudget');
   
       const categories = await Expense.distinct("category");

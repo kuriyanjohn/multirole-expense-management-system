@@ -25,6 +25,8 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
+  console.log('login route');
+  
   const schema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),

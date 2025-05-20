@@ -3,14 +3,12 @@ const router = express.Router();
 const { protect, authorizeRoles } = require('../middlewares/authMiddleware');
 const managerController = require('../controllers/manager/managerController');
 
-router.use(protect);
-router.use(authorizeRoles('manager'));
 
-router.get('/expenses/team', managerController.getTeamExpenses);
-router.patch('/expenses/:id/approve',managerController.approveExpense);
-router.get('/expenses', managerController.getManagerExpenses);
-router.get('/budgets', managerController.getTeamBudgets);
-router.get('/notifications',managerController.getManagerNotifications);
-router.get('/manager',managerController.getManagerDashboard)
+router.get('/expenses/team',protect,authorizeRoles('manager'), managerController.getTeamExpenses);
+router.patch('/expenses/:id/approve',protect,authorizeRoles('manager'),managerController.approveExpense);
+router.get('/expenses',protect,authorizeRoles('manager'), managerController.getManagerExpenses);
+router.get('/budgets',protect,authorizeRoles('manager'), managerController.getTeamBudgets);
+router.get('/notifications',protect,authorizeRoles('manager'),managerController.getManagerNotifications);
+router.get('/manager',protect,authorizeRoles('manager'),managerController.getManagerDashboard)
 
 module.exports = router;
