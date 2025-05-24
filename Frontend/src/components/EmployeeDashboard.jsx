@@ -198,7 +198,6 @@ const handleDelete = async (id) => {
       }
     )
 
-
       setExpenses((prev) => prev.filter((e) => e._id !== id));
       toast.success("Expense deleted");
     }
