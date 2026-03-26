@@ -35,6 +35,9 @@ app.use("/api/expenses", expenseRoutes);
 app.use('/api/employee', require('./routes/employeeRoutes'));
 app.use('/api/manager', require('./routes/managerRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/categories', require('./routes/categoryRoutes'));
+app.use('/api/budgets', require('./routes/budgetRoutes'));
+
 
 app.use((err, req, res, next) => {
   console.error(err);

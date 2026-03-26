@@ -1,5 +1,6 @@
 const Expense = require('../../models/expenseModel');
 const User = require('../../models/User');
+const Category = require('../../models/category');
 
 const getAllExpenses = async (req, res) => {
   try {
@@ -23,10 +24,9 @@ const getAdminDashboardData = async (req, res) => {
       console.log('admindashboard');
       
       const expenses = await Expense.find().populate('createdBy', 'name email team role');
-      const users = await User.find({}, 'name email  role team company');
-      const companies = await Company.find({}, 'name monthlyBudget');
+      const users = await User.find({}, 'name email role team');
   
-      const categories = await Expense.distinct("category");
+      const categories = await Category.find();
   
       const monthlyTrend = await Expense.aggregate([
         {
@@ -51,7 +51,6 @@ const getAdminDashboardData = async (req, res) => {
       res.status(200).json({
         expenses,
         users,
-        companies,
         categories,
         monthlyTrend: formattedMonthlyTrend,
       });
@@ -61,8 +60,31 @@ const getAdminDashboardData = async (req, res) => {
     }
   };
 
+const exportExpenses = async (req, res) => {
+  try {
+    const expenses = await Expense.find().populate('createdBy', 'name email role');
+    if (!expenses.length) return res.status(404).json({ message: 'No expenses found' });
+
+    const headers = ['ID', 'Date', 'Amount', 'Category', 'Project', 'Status', 'User Name', 'User Email'];
+    const rows = expenses.map(e => {
+      const date = new Date(e.date).toISOString().split('T')[0];
+      const userName = e.createdBy ? e.createdBy.name.replace(/"/g, '""') : 'Unknown';
+      const userEmail = e.createdBy ? e.createdBy.email : 'Unknown';
+      return `"${e._id}","${date}","${e.amount}","${e.category}","${e.project}","${e.status}","${userName}","${userEmail}"`;
+    });
+
+    const csvData = [headers.join(','), ...rows].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=expenses.csv');
+    res.status(200).send(csvData);
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting expenses' });
+  }
+};
+
 module.exports = { 
     getAllExpenses, 
     manageUsers,
-    getAdminDashboardData
+    getAdminDashboardData,
+    exportExpenses
  };
