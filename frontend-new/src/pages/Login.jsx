@@ -22,6 +22,7 @@ const Login = () => {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         toast.success('Successfully logged in!');
         if (data.user.role === 'admin') navigate('/admin');
         else if (data.user.role === 'manager') navigate('/manager');
@@ -133,7 +134,7 @@ const Login = () => {
                   />
                 </div>
                 <div className="flex justify-end mt-2">
-                  <a href="#" className="text-sm font-medium text-primary-600 hover:text-primary-700">Forgot password?</a>
+                  <button type="button" className="text-sm font-medium text-primary-600 hover:text-primary-700">Forgot password?</button>
                 </div>
               </div>
 

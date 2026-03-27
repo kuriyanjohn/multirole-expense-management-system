@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+  XAxis, YAxis, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend 
 } from 'recharts';
-import { DollarSign, Clock, CheckCircle, XCircle, FileText, Plus, Edit, Trash2, Tag, Loader2 } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, XCircle, Trash2, Tag, Loader2 } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899'];
@@ -13,18 +13,18 @@ const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899'
 const AdminDashboard = () => {
   const [data, setData] = useState({ expenses: [], users: [], categories: [], monthlyTrend: [] });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
   const [newCategoryName, setNewCategoryName] = useState('');
   
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => {
-    if (!token) return navigate('/login');
-    fetchDashboardData();
-  }, [token, navigate]);
+  let activeTab = 'overview';
+  if (location.pathname === '/admin/users') activeTab = 'users';
+  if (location.pathname === '/admin/settings') activeTab = 'settings';
+  if (location.pathname === '/admin/expenses') activeTab = 'expenses';
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('http://localhost:5000/api/admin', {
@@ -41,31 +41,14 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, navigate]);
 
-  const handleExportCSV = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/admin/expenses/export", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'expenses.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        toast.success('Export downloaded successfully!');
-      } else {
-        toast.error('Failed to export CSV');
-      }
-    } catch (error) {
-      toast.error('Error downloading CSV');
-    }
-  };
+  useEffect(() => {
+    if (!token) return navigate('/login');
+    fetchDashboardData();
+  }, [token, navigate, fetchDashboardData]);
+
+
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
@@ -118,24 +101,12 @@ const AdminDashboard = () => {
   const approvedCount = expenses.filter(e => e.status === 'approved').length;
   const rejectedCount = expenses.filter(e => e.status === 'rejected').length;
 
+  const managers = users.filter((u) => u.role === 'manager');
+  const employees = users.filter((u) => u.role === 'employee');
+
   return (
     <Layout role="admin" title="Admin Overview">
-      {/* Tabs */}
-      <div className="flex items-center space-x-1 bg-white/50 backdrop-blur-md p-1 rounded-2xl border border-slate-200 w-max mb-8 shadow-sm">
-        {['overview', 'expenses', 'settings'].map(tab => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold capitalize transition-all duration-300 ${
-              activeTab === tab 
-                ? 'bg-white text-primary-700 shadow-sm border border-slate-100' 
-                : 'text-slate-500 hover:text-slate-800 hover:bg-white/40'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+
 
       {activeTab === 'overview' && (
         <div className="animate-fade-in space-y-8">
@@ -190,14 +161,72 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      {activeTab === 'users' && (
+        <div className="animate-fade-in space-y-8">
+          <div className="glass-card p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">Managers</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 text-sm font-semibold text-slate-500">
+                    <th className="py-4 px-4 pl-0">Name</th>
+                    <th className="py-4 px-4">Email</th>
+                    <th className="py-4 px-4">Team</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {managers.map((user) => (
+                    <tr key={user._id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-4 pl-0 font-medium text-slate-700">{user.name}</td>
+                      <td className="py-4 px-4 text-slate-500">{user.email}</td>
+                      <td className="py-4 px-4 font-semibold text-slate-700">{user.team || 'N/A'}</td>
+                    </tr>
+                  ))}
+                  {managers.length === 0 && (
+                    <tr>
+                      <td colSpan="3" className="py-8 text-center text-slate-500">No managers found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div className="glass-card p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">Employees</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 text-sm font-semibold text-slate-500">
+                    <th className="py-4 px-4 pl-0">Name</th>
+                    <th className="py-4 px-4">Email</th>
+                    <th className="py-4 px-4">Team</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {employees.map((user) => (
+                    <tr key={user._id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-4 pl-0 font-medium text-slate-700">{user.name}</td>
+                      <td className="py-4 px-4 text-slate-500">{user.email}</td>
+                      <td className="py-4 px-4 font-semibold text-slate-700">{user.team || 'N/A'}</td>
+                    </tr>
+                  ))}
+                  {employees.length === 0 && (
+                    <tr>
+                      <td colSpan="3" className="py-8 text-center text-slate-500">No employees found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'expenses' && (
         <div className="animate-fade-in glass-card p-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-slate-800">Expense Reports</h3>
-            <button onClick={handleExportCSV} className="btn-primary flex items-center">
-              <FileText className="h-4 w-4 mr-2" />
-              Export CSV
-            </button>
           </div>
           
           <div className="overflow-x-auto">
