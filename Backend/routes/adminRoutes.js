@@ -5,7 +5,7 @@ const adminController = require('../controllers/admin/adminController');
 
 router.get('/expenses/all',protect,authorizeRoles('admin'), adminController.getAllExpenses);
 router.get('/users',protect,authorizeRoles('admin'), adminController.manageUsers);
-router.get('/admin',protect,authorizeRoles('admin'), adminController.getAdminDashboardData);
+router.get('/',protect,authorizeRoles('admin'), adminController.getAdminDashboardData);
 router.get('/expenses/export', protect, authorizeRoles('admin'), adminController.exportExpenses);
 
 
