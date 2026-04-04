@@ -5,7 +5,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend 
 } from 'recharts';
-import { DollarSign, Clock, CheckCircle, XCircle, Trash2, Tag, Loader2 } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, XCircle, Trash2, Tag, Loader2, Eye } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899'];
@@ -14,6 +14,7 @@ const AdminDashboard = () => {
   const [data, setData] = useState({ expenses: [], users: [], categories: [], monthlyTrend: [] });
   const [loading, setLoading] = useState(true);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [selectedExpense, setSelectedExpense] = useState(null);
   
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
@@ -103,6 +104,59 @@ const AdminDashboard = () => {
 
   const managers = users.filter((u) => u.role === 'manager');
   const employees = users.filter((u) => u.role === 'employee');
+
+  const ExpenseDetailsModal = () => {
+    if (!selectedExpense) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h3 className="text-xl font-bold text-slate-800">Expense Details</h3>
+            <button onClick={() => setSelectedExpense(null)} className="text-slate-400 hover:text-slate-600 transition"><XCircle className="h-6 w-6" /></button>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Employee</p>
+                <p className="text-slate-800 font-semibold">{selectedExpense.createdBy?.name || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Amount</p>
+                <p className="text-emerald-600 font-bold text-lg">${selectedExpense.amount}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Category</p>
+                <p className="text-slate-800">{selectedExpense.category}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Date</p>
+                <p className="text-slate-800">{new Date(selectedExpense.date).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Project</p>
+                <p className="text-slate-800">{selectedExpense.project || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Status</p>
+                <p className="text-slate-800 capitalize font-medium">{selectedExpense.status}</p>
+              </div>
+            </div>
+            {selectedExpense.notes && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <p className="text-sm font-medium text-slate-500 mb-1">Notes</p>
+                <p className="text-slate-700 bg-slate-50 p-3 rounded-lg text-sm">{selectedExpense.notes}</p>
+              </div>
+            )}
+             {selectedExpense.receipt && (
+               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+                 <a href={selectedExpense.receipt} target="_blank" rel="noreferrer" className="px-4 py-2 bg-primary-50 text-primary-600 font-semibold rounded-lg hover:bg-primary-100 transition">View Receipt ↗</a>
+               </div>
+             )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Layout role="admin" title="Admin Overview">
@@ -238,6 +292,7 @@ const AdminDashboard = () => {
                   <th className="py-4 px-4">Category</th>
                   <th className="py-4 px-4">Amount</th>
                   <th className="py-4 px-4">Status</th>
+                  <th className="py-4 px-4 text-right">Details</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -260,11 +315,14 @@ const AdminDashboard = () => {
                         {exp.status.charAt(0).toUpperCase() + exp.status.slice(1)}
                       </span>
                     </td>
+                    <td className="py-4 px-4 text-right">
+                      <button onClick={() => setSelectedExpense(exp)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition inline-flex justify-center" title="View Details"><Eye className="w-5 h-5" /></button>
+                    </td>
                   </tr>
                 ))}
                 {expenses.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="py-8 text-center text-slate-500">No expenses recorded yet.</td>
+                    <td colSpan="6" className="py-8 text-center text-slate-500">No expenses recorded yet.</td>
                   </tr>
                 )}
               </tbody>
@@ -313,6 +371,7 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      <ExpenseDetailsModal />
     </Layout>
   );
 };

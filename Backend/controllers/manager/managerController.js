@@ -7,7 +7,9 @@ const Category=require('../../models/category')
 
 const getTeamExpenses = async (req, res) => {
   try {
-    const expenses = await Expense.find(); 
+    const expenses = await Expense.find()
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: -1 }); 
     res.json(expenses);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving team expenses' });
@@ -16,10 +18,14 @@ const getTeamExpenses = async (req, res) => {
 
 const approveExpense = async (req, res) => {
   try {
-    const expense = await Expense.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
+    const { status } = req.body;
+    if (!['approved', 'rejected'].includes(status)) {
+       return res.status(400).json({ message: 'Invalid status' });
+    }
+    const expense = await Expense.findByIdAndUpdate(req.params.id, { status }, { new: true });
     res.json(expense);
   } catch (err) {
-    res.status(500).json({ message: 'Error approving expense' });
+    res.status(500).json({ message: 'Error updating expense status' });
   }
 };
 const getManagerExpenses = async (req, res) => {
