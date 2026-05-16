@@ -5,20 +5,19 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-
+const authRoutes = require('./routes/authRoutes');
+const expenseRoutes = require('./routes/expenseRoutes')
 const connectDB = require('./config/db.js'); // MongoDB connection
 const PORT = process.env.PORT;
 
-const authRoutes = require('./routes/authRoutes');
-const expenseRoutes = require('./routes/expenseRoutes.js')
-
 //  CORS 
-app.use(cors({
-  origin: process.env.CLIENT_URL, 
+const corsOptions = {
+  origin: [process.env.CLIENT_URL, 'http://localhost:3000'], 
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-}));
-
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept']
+};
+app.use(cors(corsOptions));
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -28,7 +27,6 @@ app.use('/api/auth', limiter);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
 app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
@@ -39,6 +37,7 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/budgets', require('./routes/budgetRoutes'));
 
+app.use('/uploads', express.static('uploads'));
 
 app.use((err, req, res, next) => {
   console.error(err);
@@ -47,7 +46,7 @@ app.use((err, req, res, next) => {
 
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(` http://localhost:${PORT}`);
+    console.log(`http://localhost:${PORT}`);
   });
 }).catch((err) => {
   console.error(' Failed to connect to DB:', err);

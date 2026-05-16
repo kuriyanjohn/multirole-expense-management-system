@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FileText, Users, DollarSign, Loader2, XCircle, Eye } from 'lucide-react';
+import { FileText, DollarSign, Loader2, XCircle, Eye } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const ManagerDashboard = () => {
@@ -30,18 +30,28 @@ const ManagerDashboard = () => {
   };
 
   const handleAction = async (id, status) => {
-    try {
+    try {      
       const res = await fetch(`http://localhost:5000/api/manager/expenses/${id}/approve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status }),
       });
+      console.log('responseee',res);
+      
+      const data=await res.json()
+      console.log('data:',data);
+      
       if (res.ok) {
         toast.success(`Expense ${status}`);
         fetchTeamExpenses();
+      }else{
+        console.error('Erorr:',data);
+        toast.error(data.message||'Action failed')
+        return;
       }
     } catch (error) {
-      toast.error('Action failed');
+      console.error('Fetch errorr',error)
+      toast.error('Network error');
     }
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FileText, Plus, Clock, CheckCircle, XCircle, Loader2, X, Upload } from 'lucide-react';
+import { FileText, Plus, Clock, CheckCircle, XCircle, Loader2, X, Upload, Eye } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const EmployeeDashboard = () => {
@@ -10,6 +10,7 @@ const EmployeeDashboard = () => {
   const [loading, setLoading] = useState(true);
   
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     amount: '', date: '', category: '', project: '', notes: '', receipt: null
@@ -150,7 +151,8 @@ const EmployeeDashboard = () => {
                   <th className="py-4 px-4">Category</th>
                   <th className="py-4 px-4">Notes</th>
                   <th className="py-4 px-4">Amount</th>
-                  <th className="py-4 px-4 text-right">Status</th>
+                  <th className="py-4 px-4 text-center">Status</th>
+                  <th className="py-4 px-4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -161,7 +163,7 @@ const EmployeeDashboard = () => {
                     <td className="py-4 px-4 font-medium text-slate-600">{exp.category}</td>
                     <td className="py-4 px-4 text-slate-500 max-w-xs truncate">{exp.notes || '-'}</td>
                     <td className="py-4 px-4 font-bold text-slate-800">${exp.amount}</td>
-                    <td className="py-4 px-4 text-right">
+                    <td className="py-4 px-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
                         exp.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
                         exp.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
@@ -170,11 +172,16 @@ const EmployeeDashboard = () => {
                         {exp.status.toUpperCase()}
                       </span>
                     </td>
+                    <td className="py-4 px-4 text-center">
+                      <button onClick={() => setSelectedExpense(exp)} className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition" title="View Details">
+                        <Eye className="h-5 w-5 mx-auto" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {expenses.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="py-8 text-center text-slate-500">No expenses submitted yet.</td>
+                    <td colSpan="7" className="py-8 text-center text-slate-500">No expenses submitted yet.</td>
                   </tr>
                 )}
               </tbody>
@@ -254,6 +261,84 @@ const EmployeeDashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {selectedExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="text-xl font-bold text-slate-800">Expense Details</h3>
+              <button onClick={() => setSelectedExpense(null)} className="text-slate-400 hover:text-slate-600 transition">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Amount</p>
+                  <p className="text-lg font-bold text-slate-800">${selectedExpense.amount}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Date</p>
+                  <p className="text-slate-700">{new Date(selectedExpense.date).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Category</p>
+                  <p className="text-slate-700">{selectedExpense.category}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Project</p>
+                  <p className="text-slate-700">{selectedExpense.project || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold mt-1 ${
+                    selectedExpense.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                    selectedExpense.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                    'bg-amber-100 text-amber-700'
+                  }`}>
+                    {selectedExpense.status.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-slate-500">Notes</p>
+                <p className="text-slate-700 mt-1 bg-slate-50 p-3 rounded-lg border border-slate-100">{selectedExpense.notes || 'No notes provided.'}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-slate-500 mb-2">Receipt</p>
+                {selectedExpense.receipt ? (
+                  <div className="border border-slate-200 rounded-lg overflow-hidden">
+                    {selectedExpense.receipt.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                      <img src={`http://localhost:5000/uploads/receipts/${selectedExpense.receipt}`} alt="Receipt" className="w-full h-auto max-h-64 object-contain bg-slate-50" />
+                    ) : (
+                      <div className="p-4 bg-slate-50 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <FileText className="h-8 w-8 text-slate-400 mr-3" />
+                          <span className="text-sm font-medium text-slate-700 truncate max-w-[200px]">{selectedExpense.receipt}</span>
+                        </div>
+                        <a href={`http://localhost:5000/uploads/receipts/${selectedExpense.receipt}`} target="_blank" rel="noreferrer" className="text-sm text-primary-600 hover:text-primary-700 font-medium bg-primary-50 px-3 py-1.5 rounded-md transition">
+                          View File
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 italic text-sm">No receipt attached.</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button onClick={() => setSelectedExpense(null)} className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg transition">
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

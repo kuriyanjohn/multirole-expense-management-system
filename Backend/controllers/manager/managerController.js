@@ -18,6 +18,8 @@ const getTeamExpenses = async (req, res) => {
 
 const approveExpense = async (req, res) => {
   try {
+    console.log('approve mid');
+    
     const { status } = req.body;
     if (!['approved', 'rejected'].includes(status)) {
        return res.status(400).json({ message: 'Invalid status' });

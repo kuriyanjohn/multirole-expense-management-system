@@ -5,8 +5,12 @@ const { protect,authorizeRoles  } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/add", protect,authorizeRoles('employee'), (req, res, next) => {next();
-}, upload.single("receipt"), (req, res, next) => {next();
-}, addExpense);
+router.post(
+  "/add",
+  protect,
+  authorizeRoles('employee'),
+  upload.single("receipt"),
+  addExpense
+);
 
 module.exports = router;

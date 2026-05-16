@@ -5,10 +5,12 @@ const managerController = require('../controllers/manager/managerController');
 
 
 router.get('/expenses/team',protect,authorizeRoles('manager'), managerController.getTeamExpenses);
-router.patch('/expenses/:id/approve',protect,authorizeRoles('manager'),managerController.approveExpense);
+router.patch('/expenses/:id/approve',protect,authorizeRoles('manager'), (req, res, next) => {
+  console.log(`[ROUTE HIT] Approving expense with ID: ${req.params.id}`);
+  next();
+}, managerController.approveExpense);
 router.get('/expenses',protect,authorizeRoles('manager'), managerController.getManagerExpenses);
 router.get('/budgets',protect,authorizeRoles('manager'), managerController.getTeamBudgets);
 router.get('/notifications',protect,authorizeRoles('manager'),managerController.getManagerNotifications);
-router.get('/manager',protect,authorizeRoles('manager'),managerController.getManagerDashboard)
-
+router.get('/', protect, authorizeRoles('manager'), managerController.getManagerDashboard);
 module.exports = router;
