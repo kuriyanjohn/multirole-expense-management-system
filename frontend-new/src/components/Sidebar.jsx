@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Settings, LogOut, ShieldCheck, DollarSign } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, LogOut, ShieldCheck, DollarSign, FolderKanban } from 'lucide-react';
 
 const Sidebar = ({ role }) => {
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ const Sidebar = ({ role }) => {
     if (role === 'manager') {
       return [
         { path: '/manager', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/manager/projects', icon: FolderKanban, label: 'Projects' },
         { path: '/manager/team', icon: Users, label: 'Team Expenses' },
         { path: '/manager/settings', icon: Settings, label: 'Settings' }
       ];

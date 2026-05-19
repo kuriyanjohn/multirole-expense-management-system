@@ -13,4 +13,10 @@ router.get('/expenses',protect,authorizeRoles('manager'), managerController.getM
 router.get('/budgets',protect,authorizeRoles('manager'), managerController.getTeamBudgets);
 router.get('/notifications',protect,authorizeRoles('manager'),managerController.getManagerNotifications);
 router.get('/', protect, authorizeRoles('manager'), managerController.getManagerDashboard);
+
+router.post('/projects', protect, authorizeRoles('manager'), managerController.createProject);
+router.get('/projects', protect, authorizeRoles('manager'), managerController.getProjects);
+router.put('/projects/:id', protect, authorizeRoles('manager'), managerController.updateProject);
+router.delete('/projects/:id', protect, authorizeRoles('manager'), managerController.deleteProject);
+
 module.exports = router;

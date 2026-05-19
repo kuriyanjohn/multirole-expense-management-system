@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
+import ManagerProjects from './pages/ManagerProjects';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="/admin/settings" element={<AdminDashboard />} />
         <Route path="/employee" element={<EmployeeDashboard />} />
         <Route path="/manager" element={<ManagerDashboard />} />
+        <Route path="/manager/projects" element={<ManagerProjects />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         {/* Protected routes will go here */}
       </Routes>

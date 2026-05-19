@@ -1,7 +1,8 @@
 const Expense = require('../../models/expenseModel');
-const  TeamBudget=require('../../models/teamBudget')
+const TeamBudget = require('../../models/teamBudget');
 const User = require('../../models/User');
-const Category=require('../../models/category')
+const Category = require('../../models/category');
+const Project = require('../../models/Project');
 
 
 
@@ -113,11 +114,67 @@ const getManagerExpenses = async (req, res) => {
       res.status(500).json({ error: 'Failed to load manager dashboard data' });
     }
   };
+  const createProject = async (req, res) => {
+    try {
+      const { name, description, budget, status } = req.body;
+      const project = new Project({
+        name,
+        description,
+        budget,
+        status,
+        manager: req.user.id
+      });
+      await project.save();
+      res.status(201).json(project);
+    } catch (err) {
+      res.status(500).json({ message: 'Error creating project', error: err.message });
+    }
+  };
+
+  const getProjects = async (req, res) => {
+    try {
+      const projects = await Project.find({ manager: req.user.id }).sort({ createdAt: -1 });
+      res.json(projects);
+    } catch (err) {
+      res.status(500).json({ message: 'Error retrieving projects', error: err.message });
+    }
+  };
+
+  const updateProject = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const project = await Project.findOneAndUpdate(
+        { _id: id, manager: req.user.id },
+        req.body,
+        { new: true }
+      );
+      if (!project) return res.status(404).json({ message: 'Project not found' });
+      res.json(project);
+    } catch (err) {
+      res.status(500).json({ message: 'Error updating project', error: err.message });
+    }
+  };
+
+  const deleteProject = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const project = await Project.findOneAndDelete({ _id: id, manager: req.user.id });
+      if (!project) return res.status(404).json({ message: 'Project not found' });
+      res.json({ message: 'Project deleted successfully' });
+    } catch (err) {
+      res.status(500).json({ message: 'Error deleting project', error: err.message });
+    }
+  };
+
 module.exports = { 
     getTeamExpenses, 
     approveExpense,
     getManagerExpenses,
     getManagerNotifications,
-    getTeamBudgets ,
-    getManagerDashboard
+    getTeamBudgets,
+    getManagerDashboard,
+    createProject,
+    getProjects,
+    updateProject,
+    deleteProject
 };
