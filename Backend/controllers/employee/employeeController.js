@@ -1,4 +1,5 @@
 const Expense = require("../../models/expenseModel");
+const User = require("../../models/User");
 
 const addExpense = async (req, res) => {
   try {
@@ -84,9 +85,21 @@ const getEmployeeDashboardData = async (req, res) => {
     console.log('employeedashboard');
     
     const expenses = await Expense.find({ createdBy: req.user._id });
+    const user = await User.findById(req.user._id);
+    const monthlyBudget = user ? (user.monthlyBudget || 2000) : 2000;
 
-    // Total amount spent
+    // Total amount spent (all-time)
     const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+    // Calculate spent in the current month (MTD)
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentMonthExpenses = expenses.filter(exp => {
+      const expDate = new Date(exp.date);
+      return expDate.getFullYear() === currentYear && expDate.getMonth() === currentMonth;
+    });
+    const monthlySpent = currentMonthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
     // Pie chart data: total per category
     const categoryMap = {};
@@ -119,6 +132,8 @@ const getEmployeeDashboardData = async (req, res) => {
 
     res.status(200).json({
       totalSpent,
+      monthlySpent,
+      monthlyBudget,
       expenseCount: expenses.length,
       pieData,
       barData,
@@ -130,12 +145,31 @@ const getEmployeeDashboardData = async (req, res) => {
   }
 };
 
+const updateMyBudget = async (req, res) => {
+  try {
+    const { monthlyBudget } = req.body;
+    if (monthlyBudget === undefined || monthlyBudget < 0) {
+      return res.status(400).json({ message: "Invalid budget limit value" });
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { monthlyBudget },
+      { new: true }
+    );
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.status(200).json({ message: "Budget updated successfully", monthlyBudget: user.monthlyBudget });
+  } catch (error) {
+    console.error("Error updating budget:", error);
+    res.status(500).json({ message: "Failed to update budget" });
+  }
+};
 
 module.exports = { 
   addExpense, 
   editExpense,
   deleteExpense,
   getMyExpenses ,
-  getEmployeeDashboardData
+  getEmployeeDashboardData,
+  updateMyBudget
 };
 

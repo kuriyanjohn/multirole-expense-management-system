@@ -9,6 +9,7 @@ router.post('/expenses', upload.single('receipt'),protect,authorizeRoles('employ
 router.put('/expenses/:id', upload.single('receipt'),protect,authorizeRoles('employee'), employeeController.editExpense);
 router.delete('/expenses/:id',protect,authorizeRoles('employee'), employeeController.deleteExpense); 
 router.get('/expenses',protect,authorizeRoles('employee'), employeeController.getMyExpenses);
-router.get('/dashboard',protect,authorizeRoles('employee'),employeeController.getEmployeeDashboardData)
+router.get('/dashboard',protect,authorizeRoles('employee'),employeeController.getEmployeeDashboardData);
+router.put('/budget',protect,authorizeRoles('employee'),employeeController.updateMyBudget);
 
 module.exports = router;

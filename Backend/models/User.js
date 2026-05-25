@@ -9,6 +9,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['admin', 'manager', 'employee'],
     default: 'employee',
+  },
+  monthlyBudget: {
+    type: Number,
+    default: 2000,
+  },
+  team: {
+    type: String,
+    default: 'Engineering',
   }
 }, { timestamps: true });
 
