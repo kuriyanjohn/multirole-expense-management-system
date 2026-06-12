@@ -3,7 +3,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/Backend/server.js"
+      "dest": "https://multirole-expense-management-system.onrender.com"
     }
   ]
 }
